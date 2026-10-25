@@ -1,5 +1,5 @@
-import { DashboardOverview } from "@/features/dashboard/components/dashboard-overview"
+import { redirect } from "next/navigation"
 
 export default function DashboardPage() {
-  return <DashboardOverview />
+  redirect("/dashboard/cms/collections")
 }

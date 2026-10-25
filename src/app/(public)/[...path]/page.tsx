@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
-import { PublicContentPage } from "@/features/public-site/components/public-content-page"
-import { getPublicRoute } from "@/features/public-site/server/data"
+import { PublicContentPage } from "@/components/public-site/pages/public-content-page"
+import { getPublicRoute } from "@/lib/public-site/server/data"
 
 type PublicContentProps = {
   params: Promise<{ path: string[] }>

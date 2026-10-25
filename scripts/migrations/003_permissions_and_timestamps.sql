@@ -1,7 +1,3 @@
-INSERT INTO role_permissions (role_id, permission_key)
-SELECT id, 'pages.manage' FROM roles WHERE slug IN ('superadmin', 'admin')
-ON CONFLICT (role_id, permission_key) DO NOTHING;
-
 CREATE FUNCTION set_updated_at_timestamp() RETURNS trigger AS $$
 BEGIN
   NEW.updated_at = now();

@@ -2,7 +2,7 @@ import {
   getCmsRecords,
   mutateCmsRecord,
   removeCmsRecord,
-} from "@/features/cms/server/handlers"
+} from "@/lib/cms/server/handlers"
 
 export async function GET() {
   return getCmsRecords()

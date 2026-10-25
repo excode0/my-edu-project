@@ -1,5 +1,4 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+﻿import { cva, type VariantProps } from "class-variance-authority"
 
 const emptyMediaVariants = cva(
   "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",

@@ -1,8 +1,8 @@
 import { Suspense } from "react"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { requireUser } from "@/features/auth/server/auth"
-import { DashboardSidebar } from "@/features/dashboard/components/dashboard-sidebar"
-import { DashboardTopbar } from "@/features/dashboard/components/dashboard-topbar"
+import { requireUser } from "@/lib/auth/server/auth"
+import { DashboardSidebar } from "@/components/dashboard/layout/dashboard-sidebar"
+import { DashboardTopbar } from "@/components/dashboard/layout/dashboard-topbar"
 
 export const instant = false
 

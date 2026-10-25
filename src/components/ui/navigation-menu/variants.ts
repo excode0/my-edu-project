@@ -1,5 +1,4 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+﻿import { cva, type VariantProps } from "class-variance-authority"
 
 
 const navigationMenuTriggerStyle = cva(

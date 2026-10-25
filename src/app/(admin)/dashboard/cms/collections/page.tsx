@@ -1,4 +1,4 @@
-import { CmsModulePage } from "@/features/cms/server/module-page"
+import { CmsModulePage } from "@/components/dashboard/cms/module-page"
 
 export default function Page() {
   return <CmsModulePage module="collections" />

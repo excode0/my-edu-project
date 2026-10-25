@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
-import { HomePage } from "@/features/public-site/components/home-page"
-import { getPublicSiteData } from "@/features/public-site/server/data"
+import { HomePage } from "@/components/public-site/home/home-page"
+import { getPublicSiteData } from "@/lib/public-site/server/data"
 
 export async function generateMetadata(): Promise<Metadata> {
   const cms = await getPublicSiteData()

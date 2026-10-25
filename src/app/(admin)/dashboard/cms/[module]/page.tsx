@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation"
 
-const valid = ["identity", "users", "collections", "items", "submissions", "pages", "media", "templates", "template-config", "navigation", "settings", "audit"]
+const valid = ["collections", "news"]
 
 export default async function ModulePage({ params }: { params: Promise<{ module: string }> }) {
   const { module } = await params
-  if (!valid.includes(module)) redirect("/dashboard/cms")
+  if (!valid.includes(module)) redirect("/dashboard/cms/collections")
   redirect(`/dashboard/cms/${module}`)
 }
