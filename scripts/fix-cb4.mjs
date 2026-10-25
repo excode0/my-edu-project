@@ -1,0 +1,11 @@
+import fs from "fs";
+import path from "path";
+const dir = path.resolve("src/components/ui/code-block");
+const def = path.join(dir, "default.tsx");
+let code = fs.readFileSync(def, "utf8");
+code = code.replace(/variant = "default",/g, 'highlighted = false,');
+code = code.replace(/data-variant=\{variant\}/g, 'data-highlighted={highlighted}');
+code = code.replace(/codeBlockLineVariants\(\{ variant \}\)/g, 'codeBlockLineVariants({ highlighted })');
+code = code.replace(/codeBlockLineVariants\(\{\s*highlighted\s*\}\)/g, 'codeBlockLineVariants({ highlighted })');
+fs.writeFileSync(def, code.trim() + "\n");
+console.log("done");
