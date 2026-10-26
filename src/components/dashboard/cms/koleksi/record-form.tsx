@@ -2,6 +2,7 @@ import { Check, X } from "lucide-react"
 import { inputClassName, statusOptions } from "@/components/dashboard/cms/presentation"
 import { CmsTemplateConfigEditor } from "@/components/dashboard/cms/template-config-editor"
 import { CmsCollectionFieldInput } from "./field-input"
+import { FieldSyntaxGuide } from "./field-syntax-guide"
 import type { CmsItemEditor } from "./record-editor"
 import type {
   ModuleKey,
@@ -76,10 +77,29 @@ export function CmsRecordForm({
         <label className="text-xs font-medium text-slate-700">{isSubmission ? "Kode referensi" : active === "users" ? "Email" : isTemplate ? "Key registry" : "Slug / key"}<input value={draft.slug} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className={inputClassName()} /></label>
         {!(active === "items" && collectionFields && !summaryDefinition) && <label className="text-xs font-medium text-slate-700 md:col-span-2">{isSubmission ? "Catatan peninjauan" : active === "items" ? summaryDefinition?.label || "Ringkasan" : "Deskripsi / ringkasan"}<textarea rows={2} required={summaryDefinition?.required} value={draft.description} readOnly={readOnlyDescription} onChange={(event) => onDraftChange((current) => ({ ...current, description: event.target.value }))} className={inputClassName()} /></label>}
         {active !== "templates" && active !== "items" && !isSubmission && (
-          <label className="text-xs font-medium text-slate-700 md:col-span-2">
-            {active === "collections" ? "Field koleksi (pisahkan dengan koma; select: kategori:select[Akademik|Prestasi], multiselect: minat:multiselect[Musik|Olahraga]!, wajib: akhiri tipe dengan !)" : "Catatan / metadata"}
-            <input value={draft.fields} onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))} className={inputClassName()} />
-          </label>
+          active === "collections" ? (
+            <div className="text-xs font-medium text-slate-700 md:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor="collection-fields">Field koleksi</label>
+                <FieldSyntaxGuide />
+              </div>
+              <input
+                id="collection-fields"
+                value={draft.fields}
+                onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))}
+                placeholder="kategori:select[Akademik|Prestasi]!, minat:multiselect[Musik|Olahraga]"
+                className={inputClassName()}
+              />
+              <span className="mt-1 block font-normal leading-relaxed text-slate-500">
+                Pisahkan field dengan koma. Tambahkan <code className="font-mono text-slate-600">!</code> di akhir tipe untuk menandai wajib.
+              </span>
+            </div>
+          ) : (
+            <label className="text-xs font-medium text-slate-700 md:col-span-2">
+              Catatan / metadata
+              <input value={draft.fields} onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))} className={inputClassName()} />
+            </label>
+          )
         )}
         {active === "collections" && (
           <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 text-xs md:col-span-2">

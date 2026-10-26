@@ -1,19 +1,16 @@
-import { AuthForm } from "@/components/auth/auth-form"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Metadata } from "next"
+import { LoginScreen } from "@/components/auth/login-screen"
+
+export const metadata: Metadata = {
+  title: "Masuk ke dashboard | Panel Sekolah",
+  description: "Masuk ke dashboard manajemen website sekolah.",
+}
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Panel sekolah</p>
-          <CardTitle className="text-2xl">Masuk ke dashboard</CardTitle>
-          <CardDescription>Gunakan akun administrator atau editor yang telah dibuat.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AuthForm />
-        </CardContent>
-      </Card>
-    </main>
+    <LoginScreen
+      schoolName="SMA Cendekia Nusantara"
+      location="Bandung, Jawa Barat"
+    />
   )
 }

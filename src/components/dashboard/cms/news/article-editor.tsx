@@ -64,7 +64,7 @@ export function CmsNewsEditor({
             <input autoFocus required={titleField?.required ?? true} value={draft.title} onChange={(event) => onDraftChange((current) => ({ ...current, title: event.target.value }))} className="mt-1.5 h-12 w-full rounded-lg border border-slate-200 px-3 text-lg font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-100" placeholder="Tulis judul yang jelas dan menarik" />
           </label>
           <label className="block text-xs font-medium text-slate-700">
-            {summaryField?.label || "Ringkasan"}{summaryField?.required && <span className="ml-1 text-rose-600">*</span>}
+            {summaryField?.label || "Ringkasan"}{summaryField?.required && <span className="ml-1 text-rose-600">*</span>} <span> (max 300 karakter)</span>
             <textarea rows={3} required={summaryField?.required} value={draft.description} onChange={(event) => onDraftChange((current) => ({ ...current, description: event.target.value }))} className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm leading-6 outline-none placeholder:text-slate-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-100" placeholder="Ringkas inti berita untuk daftar dan pratinjau." />
           </label>
           {bodyField ? (
@@ -81,7 +81,7 @@ export function CmsNewsEditor({
         <aside className="space-y-4">
           <section className="rounded-xl border border-slate-200 p-4">
             <div className="mb-3 flex items-center gap-2"><Newspaper className="size-4 text-violet-700" /><h3 className="text-xs font-semibold text-slate-800">Publikasi</h3></div>
-            <label className="block text-xs font-medium text-slate-700">Slug berita<input value={draft.slug} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className="mt-1.5 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-violet-400" placeholder="dibuat-dari-judul" /></label>
+            <label className="block text-xs font-medium text-slate-700">Slug berita<input readOnly value={draft.slug} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className="mt-1.5 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-violet-400" placeholder="dibuat-dari-judul" /></label>
             {dateField && <label className="mt-3 block text-xs font-medium text-slate-700"><span className="flex items-center gap-1.5"><CalendarDays className="size-3.5 text-slate-400" />{dateField.label}{dateField.required && <span className="text-rose-600">*</span>}</span><div className="mt-1.5"><CmsCollectionFieldInput field={dateField} value={itemData[dateField.key]} onChange={(value) => updateField(dateField.key, value)} /></div></label>}
           </section>
 
