@@ -1,4 +1,4 @@
-import { richTextAllowedSchemes, richTextAllowedTags } from "@/lib/cms/richtext-policy"
+import { isCmsImageSource, normalizeCmsEmbedUrl, normalizeCmsLinkHref, richTextAllowedTags } from "@/lib/cms/richtext-policy"
 
 const allowedTags = new Set(richTextAllowedTags.map((tag) => tag.toUpperCase()))
 
@@ -25,16 +25,7 @@ export function sanitizeCmsEditorHtml(value: string) {
       }
 
       if (child.tagName === "A") {
-        const href = child.getAttribute("href")
-        let safeHref: string | null = null
-        if (href) {
-          try {
-            const url = new URL(href, "https://cms.invalid")
-            if (richTextAllowedSchemes.includes(url.protocol.replace(/:$/, "") as typeof richTextAllowedSchemes[number])) safeHref = href
-          } catch {
-            safeHref = null
-          }
-        }
+        const safeHref = normalizeCmsLinkHref(child.getAttribute("href") ?? "")
         const title = child.getAttribute("title")
         const target = child.getAttribute("target") === "_blank" ? "_blank" : null
         for (const attribute of Array.from(child.attributes)) child.removeAttribute(attribute.name)
@@ -44,6 +35,31 @@ export function sanitizeCmsEditorHtml(value: string) {
           child.setAttribute("target", target)
           child.setAttribute("rel", "noopener noreferrer")
         }
+      } else if (child.tagName === "IMG") {
+        const src = child.getAttribute("src") ?? ""
+        const alt = child.getAttribute("alt")?.slice(0, 255) ?? ""
+        for (const attribute of Array.from(child.attributes)) child.removeAttribute(attribute.name)
+        if (!isCmsImageSource(src)) {
+          child.remove()
+          continue
+        }
+        child.setAttribute("src", src)
+        child.setAttribute("alt", alt)
+        child.setAttribute("loading", "lazy")
+      } else if (child.tagName === "IFRAME") {
+        const src = normalizeCmsEmbedUrl(child.getAttribute("src") ?? "")
+        const title = child.getAttribute("title")?.slice(0, 160) || "Video tersemat"
+        for (const attribute of Array.from(child.attributes)) child.removeAttribute(attribute.name)
+        if (!src) {
+          child.remove()
+          continue
+        }
+        child.setAttribute("src", src)
+        child.setAttribute("title", title)
+        child.setAttribute("loading", "lazy")
+        child.setAttribute("referrerpolicy", "strict-origin-when-cross-origin")
+        child.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share")
+        child.setAttribute("allowfullscreen", "")
       } else {
         for (const attribute of Array.from(child.attributes)) child.removeAttribute(attribute.name)
       }

@@ -10,6 +10,8 @@ export type CmsRecord = {
   updatedAt: string
   collectionSlug?: string
   collectionMode?: string
+  collectionUrlPrefix?: string
+  hasPublicDetail?: boolean
   collectionFields?: CollectionFieldSchema[]
   itemData?: Record<string, unknown>
 }
@@ -48,4 +50,11 @@ export type CmsData = {
   }
   templateConfigs: TemplateEditorConfig[]
   audit: { id: string; title: string; description: string; updatedAt: string }[]
+}
+
+export type CmsMediaUploadResult = {
+  id: string
+  publicUrl: string
+  mimeType: string
+  sizeBytes: number
 }

@@ -19,6 +19,7 @@ export function CmsRecordForm({
   titleField,
   summaryField,
   renderItemEditor,
+  canUploadMedia,
   mediaRecords,
   editingId,
   draft,
@@ -31,6 +32,7 @@ export function CmsRecordForm({
   onChangeTemplateSlot,
   onSave,
   onClose,
+  onUploaded,
 }: {
   active: ModuleKey
   noun?: string
@@ -38,6 +40,7 @@ export function CmsRecordForm({
   titleField?: string
   summaryField?: string
   renderItemEditor?: CmsItemEditor
+  canUploadMedia: boolean
   mediaRecords: CmsRecord[]
   editingId: string | null
   draft: RecordDraft
@@ -50,6 +53,7 @@ export function CmsRecordForm({
   onChangeTemplateSlot: (slotKey: string, value: TemplateSlotDraft) => void
   onSave: (event: React.FormEvent<HTMLFormElement>) => void
   onClose: () => void
+  onUploaded: () => Promise<void>
 }) {
   const isTemplate = active === "templates"
   const isSubmission = active === "submissions"
@@ -66,7 +70,7 @@ export function CmsRecordForm({
         <button type="button" aria-label="Tutup formulir" onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-white hover:text-slate-700"><X className="size-4" /></button>
       </div>
       {active === "items" && renderItemEditor ? (
-        renderItemEditor({ collectionFields, mediaRecords, draft, onDraftChange })
+        renderItemEditor({ collectionFields, mediaRecords, draft, onDraftChange, canUploadMedia, onUploaded })
       ) : <div className="grid gap-3 md:grid-cols-2">
         <label className="text-xs font-medium text-slate-700">{isTemplate ? "Nama registry" : isSubmission ? "Nama pendaftar" : active === "items" ? titleDefinition?.label || "Judul" : "Nama / judul"}<input required autoFocus value={draft.title} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, title: event.target.value }))} className={inputClassName()} /></label>
         <label className="text-xs font-medium text-slate-700">{isSubmission ? "Kode referensi" : active === "users" ? "Email" : isTemplate ? "Key registry" : "Slug / key"}<input value={draft.slug} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className={inputClassName()} /></label>
@@ -75,6 +79,17 @@ export function CmsRecordForm({
           <label className="text-xs font-medium text-slate-700 md:col-span-2">
             {active === "collections" ? "Field koleksi (pisahkan dengan koma; select: kategori:select[Akademik|Prestasi], multiselect: minat:multiselect[Musik|Olahraga]!, wajib: akhiri tipe dengan !)" : "Catatan / metadata"}
             <input value={draft.fields} onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))} className={inputClassName()} />
+          </label>
+        )}
+        {active === "collections" && (
+          <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 text-xs md:col-span-2">
+            <input
+              type="checkbox"
+              checked={draft.itemData?.hasPublicDetail === true}
+              onChange={(event) => onDraftChange((current) => ({ ...current, itemData: { ...(current.itemData ?? {}), hasPublicDetail: event.target.checked } }))}
+              className="mt-0.5 size-4 accent-violet-700"
+            />
+            <span><span className="block font-semibold text-slate-700">Aktifkan halaman detail publik</span><span className="mt-1 block font-normal leading-relaxed text-slate-500">Izinkan pengunjung membuka URL untuk setiap item. Aktifkan untuk koleksi seperti berita yang memiliki halaman artikel.</span></span>
           </label>
         )}
         {active === "items" && dynamicFields.map((field) => (

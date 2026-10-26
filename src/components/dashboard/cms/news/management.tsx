@@ -25,8 +25,8 @@ export function NewsManagement({ permissions, initialData }: { permissions: stri
       titleField={newsBinding.titleField}
       summaryField={newsBinding.summaryField}
       requiredCollectionFields={newsBinding.requiredFields}
-      renderItemEditor={({ collectionFields, mediaRecords, draft, onDraftChange }) => (
-        <CmsNewsEditor feature={newsBinding} fields={collectionFields ?? []} media={mediaRecords} draft={draft} onDraftChange={onDraftChange} />
+      renderItemEditor={({ collectionFields, mediaRecords, draft, onDraftChange, canUploadMedia, onUploaded }) => (
+        <CmsNewsEditor feature={newsBinding} fields={collectionFields ?? []} media={mediaRecords} draft={draft} onDraftChange={onDraftChange} canUploadMedia={canUploadMedia} onUploaded={onUploaded} />
       )}
     />
   )

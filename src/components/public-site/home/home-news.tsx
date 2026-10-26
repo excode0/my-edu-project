@@ -1,8 +1,9 @@
 import { ArrowRight } from "lucide-react"
+import Link from "next/link"
 import type { HomeNewsItem } from "@/types/type-public-site-view"
 import { achievements, getNewsCategory, getNewsDate } from "./content"
 
-export function HomeNews({ news }: { news: HomeNewsItem[] }) {
+export function HomeNews({ news, indexHref }: { news: HomeNewsItem[]; indexHref: string }) {
   return (
     <section id="prestasi" className="scroll-mt-24 mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -10,7 +11,7 @@ export function HomeNews({ news }: { news: HomeNewsItem[] }) {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">Kabar baik dari sekolah</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Prestasi & cerita terbaru.</h2>
         </div>
-        <a href="#berita" className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700">Semua cerita <ArrowRight className="size-4" /></a>
+        <Link href={indexHref} className="inline-flex items-center gap-1 text-sm font-semibold text-violet-700">Semua cerita <ArrowRight className="size-4" /></Link>
       </div>
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         {achievements.map((achievement) => {
@@ -27,7 +28,7 @@ export function HomeNews({ news }: { news: HomeNewsItem[] }) {
         {news.length ? news.map((item, index) => (
           <article key={item.id} className={`rounded-2xl p-6 ${index % 2 ? "bg-sky-50" : "bg-violet-50"}`}>
             <p className={`text-xs font-semibold uppercase tracking-wide ${index % 2 ? "text-sky-700" : "text-violet-700"}`}>{getNewsCategory(item.fields)}</p>
-            <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
+            <h3 className="mt-3 text-lg font-semibold"><Link href={item.href} className="hover:text-violet-700">{item.title}</Link></h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
             <p className="mt-4 text-xs text-slate-500">{getNewsDate(item.fields, item.updatedAt)}</p>
           </article>

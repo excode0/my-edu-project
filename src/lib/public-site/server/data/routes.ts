@@ -52,8 +52,9 @@ export const getPublicRoute = cache(async function getPublicRoute(path: string):
     deskripsi: string | null
     url_prefix: string | null
     mode: string
+    has_public_detail: boolean
   }>(
-    `SELECT id, slug, nama, deskripsi, url_prefix, mode FROM collections
+    `SELECT id, slug, nama, deskripsi, url_prefix, mode, has_public_detail FROM collections
      WHERE url_prefix = $1 AND is_active = true AND deleted_at IS NULL LIMIT 1`,
     [path],
   )
@@ -69,26 +70,28 @@ export const getPublicRoute = cache(async function getPublicRoute(path: string):
     feature.summaryField ?? "ringkasan",
     feature.bodyField ?? "isi",
     feature.categoryField ?? "kategori",
+    feature.dateField ?? "tanggal_terbit",
   ])
   const itemFieldCase = (offset: number) => contentBindings.length
-    ? `CASE ${contentBindings.map((_, index) => `WHEN c.slug = $${index * 5 + 2} THEN ci.data->>$${index * 5 + offset}`).join(" ")} END`
+    ? `CASE ${contentBindings.map((_, index) => `WHEN c.slug = $${index * 6 + 2} THEN ci.data->>$${index * 6 + offset}`).join(" ")} END`
     : "NULL::text"
   const titleExpression = itemFieldCase(3)
   const summaryExpression = itemFieldCase(4)
   const bodyExpression = itemFieldCase(5)
   const categoryExpression = itemFieldCase(6)
+  const dateExpression = itemFieldCase(7)
   const itemResult = await db.query<{
     title: string
     description: string
     body: string
     category: string
-    published_at: Date
+    published_at: string | Date
   }>(
     `SELECT COALESCE(${titleExpression}, ci.data->>'judul', ci.slug) AS title,
        COALESCE(${summaryExpression}, ci.data->>'ringkasan', '') AS description,
        COALESCE(${bodyExpression}, ci.data->>'isi', '') AS body,
        COALESCE(${categoryExpression}, ci.data->>'kategori', '') AS category,
-       COALESCE(ci.published_at, ci.updated_at) AS published_at
+       COALESCE(NULLIF(${dateExpression}, ''), ci.published_at::text, ci.updated_at::text) AS published_at
      FROM collection_items ci JOIN collections c ON c.id = ci.collection_id
      WHERE rtrim(c.url_prefix, '/') || '/' || ci.slug = $1
        AND ci.status = 'published' AND ci.deleted_at IS NULL
@@ -117,8 +120,9 @@ async function getPublicCollection(id: string) {
     nama: string
     deskripsi: string | null
     url_prefix: string | null
+    has_public_detail: boolean
   }>(
-    `SELECT id, slug, nama, deskripsi, url_prefix FROM collections
+    `SELECT id, slug, nama, deskripsi, url_prefix, has_public_detail FROM collections
      WHERE id = $1 AND is_active = true AND deleted_at IS NULL LIMIT 1`,
     [id],
   )
@@ -132,8 +136,9 @@ async function getPublicCollectionBySlug(slug: string) {
     nama: string
     deskripsi: string | null
     url_prefix: string | null
+    has_public_detail: boolean
   }>(
-    `SELECT id, slug, nama, deskripsi, url_prefix FROM collections
+    `SELECT id, slug, nama, deskripsi, url_prefix, has_public_detail FROM collections
      WHERE slug = $1 AND is_active = true AND deleted_at IS NULL LIMIT 1`,
     [slug],
   )
@@ -146,26 +151,29 @@ async function getPublicCollectionList(collection: {
   nama: string
   deskripsi: string | null
   url_prefix: string | null
+  has_public_detail: boolean
 }): Promise<PublicRouteData> {
+  const feature = getContentBindingForCollection(collection.slug)
   const result = await db.query<{
     id: string
     title: string
     slug: string
     description: string
-    published_at: Date
+    published_at: string | Date
   }>(
     `SELECT ci.id, COALESCE(ci.data->>$2, ci.slug) AS title, ci.slug,
        COALESCE(ci.data->>$3, ci.data->>$4, '') AS description,
-       COALESCE(ci.published_at, ci.updated_at) AS published_at
+       COALESCE(NULLIF(ci.data->>$5, ''), ci.published_at::text, ci.updated_at::text) AS published_at
      FROM collection_items ci
      WHERE ci.collection_id = $1 AND ci.status = 'published' AND ci.deleted_at IS NULL
        AND (ci.published_at IS NULL OR ci.published_at <= now())
-     ORDER BY COALESCE(ci.published_at, ci.updated_at) DESC LIMIT 100`,
+     ORDER BY COALESCE(NULLIF(ci.data->>$5, ''), ci.published_at::text, ci.updated_at::text) DESC LIMIT 100`,
     [
       collection.id,
-      getContentBindingForCollection(collection.slug)?.titleField ?? "judul",
-      getContentBindingForCollection(collection.slug)?.summaryField ?? "ringkasan",
-      getContentBindingForCollection(collection.slug)?.bodyField ?? "isi",
+      feature?.titleField ?? "judul",
+      feature?.summaryField ?? "ringkasan",
+      feature?.bodyField ?? "isi",
+      feature?.dateField ?? "tanggal_terbit",
     ],
   )
   return {
@@ -173,6 +181,7 @@ async function getPublicCollectionList(collection: {
     title: collection.nama,
     description: collection.deskripsi ?? "",
     prefix: collection.url_prefix ?? "",
+    hasPublicDetail: collection.has_public_detail,
     items: result.rows.map((item) => ({
       id: item.id,
       title: item.title,

@@ -10,6 +10,8 @@ export type CmsRecordRow = {
   updated_at: Date
   collection_slug?: string
   collection_mode?: string
+  collection_url_prefix?: string
+  has_public_detail?: boolean
   collection_fields?: unknown
   item_data?: unknown
 }

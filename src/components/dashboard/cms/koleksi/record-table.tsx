@@ -1,9 +1,17 @@
-import { Trash2 } from "lucide-react"
+import Link from "next/link"
+import { ExternalLink, Trash2 } from "lucide-react"
 import { formatDate, statusStyle } from "@/components/dashboard/cms/presentation"
 import type { ModuleKey } from "@/types/type-cms"
 import type { CmsRecord } from "@/types/type-cms-api"
 
 const deletableModules: ModuleKey[] = ["collections", "items", "pages", "navigation", "users", "media"]
+
+function getPublicItemHref(active: ModuleKey, record: CmsRecord) {
+  const prefix = record.collectionUrlPrefix
+  if (active !== "items" || record.status !== "Terbit" || !record.hasPublicDetail || !prefix?.startsWith("/") || prefix.startsWith("//")) return null
+  const safePrefix = prefix.replace(/\/+$/, "")
+  return `${safePrefix}/${encodeURIComponent(record.slug)}`
+}
 
 export function CmsRecordTable({
   active,
@@ -32,7 +40,9 @@ export function CmsRecordTable({
   return (
     <div>
       <div className="space-y-3 xl:hidden">
-        {visibleRecords.map((record) => (
+        {visibleRecords.map((record) => {
+          const publicHref = getPublicItemHref(active, record)
+          return (
           <article key={record.id} className="rounded-xl border border-slate-200 bg-white p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -58,6 +68,7 @@ export function CmsRecordTable({
               </div>
             </dl>
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+              {publicHref && <Link href={publicHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"><ExternalLink className="size-3.5" />Pratinjau publik</Link>}
               {canManage && active !== "media" && <button type="button" onClick={() => onEdit(record)} className="rounded-md px-2.5 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50">Ubah</button>}
               {canToggleStatus && (
                 <button type="button" onClick={() => onToggleStatus(record)} className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100">
@@ -67,7 +78,8 @@ export function CmsRecordTable({
               {canDelete && <button type="button" aria-label={`Hapus ${record.title}`} onClick={() => onDelete(record)} className="ml-auto rounded-md p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-700"><Trash2 className="size-4" /></button>}
             </div>
           </article>
-        ))}
+          )
+        })}
         {!visibleRecords.length && <p className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-xs text-slate-500">Tidak ada data yang sesuai dengan pencarian.</p>}
       </div>
 
@@ -83,15 +95,18 @@ export function CmsRecordTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {visibleRecords.map((record) => (
+            {visibleRecords.map((record) => {
+              const publicHref = getPublicItemHref(active, record)
+              return (
               <tr key={record.id} className="align-top hover:bg-slate-50/70">
                 <td className="px-4 py-3"><p className="text-xs font-semibold text-slate-800">{record.title}</p><p className="mt-1 max-w-sm text-[11px] leading-relaxed text-slate-500">{record.description}</p></td>
                 <td className="px-4 py-3"><p className="font-mono text-[10px] text-slate-600">{record.slug || "—"}</p><p className="mt-1 max-w-xs text-[10px] leading-relaxed text-slate-400">{record.fields || "—"}</p></td>
                 <td className="px-4 py-3"><span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${statusStyle(record.status)}`}>{record.status}</span></td>
                 <td className="whitespace-nowrap px-4 py-3 text-[10px] text-slate-500">{formatDate(record.updatedAt)}</td>
-                <td className="px-4 py-3"><div className="flex flex-nowrap items-center gap-1 whitespace-nowrap">{canManage && active !== "media" && <button type="button" onClick={() => onEdit(record)} className="whitespace-nowrap rounded-md px-2 py-1.5 text-[10px] font-semibold text-violet-700 hover:bg-violet-50">Ubah</button>}{canToggleStatus && <button type="button" onClick={() => onToggleStatus(record)} className="whitespace-nowrap rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100">{record.status === "Terbit" ? active === "collections" ? "Arsipkan" : "Jadikan draf" : "Terbitkan"}</button>}{canDelete && <button type="button" aria-label={`Hapus ${record.title}`} onClick={() => onDelete(record)} className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-700"><Trash2 className="size-3.5" /></button>}</div></td>
+                <td className="px-4 py-3"><div className="flex flex-nowrap items-center gap-1 whitespace-nowrap">{publicHref && <Link href={publicHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1.5 text-[10px] font-medium text-slate-600 hover:bg-slate-100"><ExternalLink className="size-3" />Lihat</Link>}{canManage && active !== "media" && <button type="button" onClick={() => onEdit(record)} className="whitespace-nowrap rounded-md px-2 py-1.5 text-[10px] font-semibold text-violet-700 hover:bg-violet-50">Ubah</button>}{canToggleStatus && <button type="button" onClick={() => onToggleStatus(record)} className="whitespace-nowrap rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100">{record.status === "Terbit" ? active === "collections" ? "Arsipkan" : "Jadikan draf" : "Terbitkan"}</button>}{canDelete && <button type="button" aria-label={`Hapus ${record.title}`} onClick={() => onDelete(record)} className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-700"><Trash2 className="size-3.5" /></button>}</div></td>
               </tr>
-            ))}
+              )
+            })}
             {!visibleRecords.length && <tr><td colSpan={5} className="px-4 py-10 text-center text-xs text-slate-500">Tidak ada data yang sesuai dengan pencarian.</td></tr>}
           </tbody>
         </table>

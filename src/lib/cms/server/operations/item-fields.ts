@@ -1,10 +1,9 @@
-import sanitizeHtml from "sanitize-html"
 import { z } from "zod"
 import type { TransactionClient } from "./audit"
 import { ApiError } from "../domain/errors"
 import type { RecordInput } from "../domain/schemas"
 import { parseMetadata } from "../domain/text"
-import { richTextAllowedAttributes, richTextAllowedSchemes, richTextAllowedTags } from "../../richtext-policy"
+import { sanitizeCmsRichText } from "../domain/richtext"
 
 export type ItemFieldDefinition = {
   key: string
@@ -50,12 +49,7 @@ export async function buildItemData(
     let value = data[field.key]
     if (value === null) value = ""
     if (field.field_type === "richtext" && typeof value === "string") {
-      value = sanitizeHtml(value, {
-        allowedTags: [...richTextAllowedTags],
-        allowedAttributes: richTextAllowedAttributes,
-        allowedSchemes: [...richTextAllowedSchemes],
-        transformTags: { a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }, true) },
-      })
+      value = sanitizeCmsRichText(value)
       data[field.key] = value
     }
     if (["text", "textarea", "richtext", "phone"].includes(field.field_type) && typeof value !== "string") {

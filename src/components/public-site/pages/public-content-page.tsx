@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import sanitizeHtml from "sanitize-html"
 import { Suspense } from "react"
 import { AdmissionForm } from "../admissions/admission-form"
 import { getPublicRoute, getPublicSiteData } from "@/lib/public-site/server/data"
+import { sanitizeCmsRichText } from "@/lib/cms/server/domain/richtext"
 
 type PublicContentProps = {
   params: Promise<{ path: string[] }>
@@ -27,11 +27,7 @@ async function PublicContent({ params }: PublicContentProps) {
   if (!route) notFound()
 
   const safeBody = route.kind === "collection-item"
-    ? sanitizeHtml(route.body, {
-        allowedTags: ["p", "br", "strong", "b", "em", "i", "ul", "ol", "li", "blockquote", "h2", "h3", "a"],
-        allowedAttributes: { a: ["href"] },
-        allowedSchemes: ["http", "https", "mailto"],
-      })
+    ? sanitizeCmsRichText(route.body)
     : ""
 
   return (
@@ -61,7 +57,7 @@ async function PublicContent({ params }: PublicContentProps) {
             {route.items.length ? route.items.map((item) => (
               <article key={item.id} className="rounded-2xl border border-slate-200 p-5">
                 <h2 className="text-lg font-semibold text-slate-900">
-                  {route.prefix ? (
+                  {route.prefix && route.hasPublicDetail ? (
                     <Link href={`${route.prefix}/${encodeURIComponent(item.slug)}`} className="hover:text-violet-700">{item.title}</Link>
                   ) : item.title}
                 </h2>

@@ -76,10 +76,10 @@ export async function createCollection(user: AuthUser, record: RecordInput) {
   const fields = parseCollectionFields(record.fields)
   return withTransaction(async (client) => {
     const inserted = await client.query<{ id: string }>(
-      `INSERT INTO collections (slug, nama, deskripsi, kind, mode, url_prefix, is_active)
-       VALUES ($1::text, $2, $3, 'dynamic', 'content', '/' || $1::text, $4)
+      `INSERT INTO collections (slug, nama, deskripsi, kind, mode, has_public_detail, url_prefix, is_active)
+       VALUES ($1::text, $2, $3, 'dynamic', 'content', $4, '/' || $1::text, $5)
        RETURNING id`,
-      [slug, record.title, record.description || null, record.status === "Terbit"],
+      [slug, record.title, record.description || null, record.itemData?.hasPublicDetail === true, record.status === "Terbit"],
     )
     const id = inserted.rows[0]?.id
     if (!id) throw new Error("Collection insert did not return an ID.")
@@ -91,11 +91,14 @@ export async function createCollection(user: AuthUser, record: RecordInput) {
 export async function updateCollection(user: AuthUser, id: string, record: RecordInput) {
   const fields = parseCollectionFields(record.fields)
   return withTransaction(async (client) => {
-    const before = await client.query("SELECT * FROM collections WHERE id = $1 AND deleted_at IS NULL FOR UPDATE", [id])
+    const before = await client.query<{ slug: string; url_prefix: string | null }>("SELECT * FROM collections WHERE id = $1 AND deleted_at IS NULL FOR UPDATE", [id])
     if (!before.rowCount) throw new ApiError("Koleksi tidak ditemukan.", 404)
+    const slug = slugify(record.slug || record.title).slice(0, 80)
+    const current = before.rows[0]
+    const urlPrefix = current.url_prefix === `/${current.slug}` ? `/${slug}` : current.url_prefix
     await client.query(
-      "UPDATE collections SET nama = $1, slug = $2, deskripsi = $3, is_active = $4 WHERE id = $5",
-      [record.title, slugify(record.slug || record.title).slice(0, 80), record.description || null, record.status === "Terbit", id],
+      "UPDATE collections SET nama = $1, slug = $2, deskripsi = $3, has_public_detail = $4, url_prefix = $5, is_active = $6 WHERE id = $7",
+      [record.title, slug, record.description || null, record.itemData?.hasPublicDetail === true, urlPrefix, record.status === "Terbit", id],
     )
     await saveCollectionFields(client, id, fields)
     await writeAudit(client, user, "collection.update", "collections", id, before.rows[0], record)

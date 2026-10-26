@@ -11,6 +11,7 @@ export type PublicListItem = {
 export type HomeNewsItem = {
   id: string
   title: string
+  href: string
   description: string
   fields: string
   updatedAt: string
@@ -18,7 +19,7 @@ export type HomeNewsItem = {
 
 export type PublicRouteData =
   | { kind: "page"; title: string; description: string; fields: string }
-  | { kind: "collection-list"; title: string; description: string; prefix: string; items: PublicListItem[] }
+  | { kind: "collection-list"; title: string; description: string; prefix: string; hasPublicDetail: boolean; items: PublicListItem[] }
   | { kind: "collection-item"; title: string; description: string; body: string; category: string; publishedAt: string }
   | { kind: "admission"; title: string; description: string }
 
@@ -44,10 +45,12 @@ export type PublicSiteData = {
       slug: string
       description: string
       fields: string
+      href: string
       status: "Terbit"
       updatedAt: string
     }[]
   }
+  newsIndexHref: string
   navigation: { label: string; href: string }[]
   admissionFields: AdmissionField[]
 }

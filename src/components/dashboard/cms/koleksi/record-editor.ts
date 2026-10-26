@@ -8,6 +8,8 @@ export type CmsItemEditorProps = {
   mediaRecords: CmsRecord[]
   draft: RecordDraft
   onDraftChange: (updater: (current: RecordDraft) => RecordDraft) => void
+  canUploadMedia: boolean
+  onUploaded: () => Promise<void>
 }
 
 export type CmsItemEditor = (props: CmsItemEditorProps) => ReactNode

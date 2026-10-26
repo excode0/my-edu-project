@@ -28,6 +28,8 @@ export function mapRecords(rows: CmsRecordRow[]): CmsRecord[] {
     updatedAt: new Date(row.updated_at).toISOString(),
     ...(row.collection_slug ? { collectionSlug: row.collection_slug } : {}),
     ...(row.collection_mode ? { collectionMode: row.collection_mode } : {}),
+    ...(row.collection_url_prefix ? { collectionUrlPrefix: row.collection_url_prefix } : {}),
+    ...(typeof row.has_public_detail === "boolean" ? { hasPublicDetail: row.has_public_detail } : {}),
     ...(Array.isArray(row.collection_fields) ? { collectionFields: row.collection_fields as CmsRecord["collectionFields"] } : {}),
     ...(row.item_data && typeof row.item_data === "object" && !Array.isArray(row.item_data)
       ? { itemData: row.item_data as Record<string, unknown> }

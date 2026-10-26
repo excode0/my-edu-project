@@ -33,7 +33,7 @@ async function PublicHome() {
       />
       <HomeAbout schoolName={schoolName} vision={cms?.identity.vision || ""} />
       <HomePrograms />
-      <HomeNews news={publicNews} />
+      <HomeNews news={publicNews} indexHref={cms.newsIndexHref} />
       <HomeAdmission
         admissionEnabled={cms.settings.admissionEnabled}
         fields={cms.admissionFields}

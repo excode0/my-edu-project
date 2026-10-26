@@ -24,6 +24,7 @@ type CmsRecordWorkspaceProps = {
   renderItemEditor?: CmsItemEditor
   canManage: boolean
   canPublish: boolean
+  canUploadMedia: boolean
   records: CmsRecord[]
   visibleRecords: CmsRecord[]
   query: string
@@ -57,6 +58,7 @@ export function CmsRecordWorkspace(props: CmsRecordWorkspaceProps) {
     renderItemEditor,
     canManage,
     canPublish,
+    canUploadMedia,
     records,
     visibleRecords,
     query,
@@ -102,6 +104,7 @@ export function CmsRecordWorkspace(props: CmsRecordWorkspaceProps) {
           titleField={titleField}
           summaryField={summaryField}
           renderItemEditor={renderItemEditor}
+          canUploadMedia={canUploadMedia}
           mediaRecords={data.records.media}
           editingId={editingId}
           draft={draft}
@@ -114,6 +117,7 @@ export function CmsRecordWorkspace(props: CmsRecordWorkspaceProps) {
           onChangeTemplateSlot={onChangeTemplateSlot}
           onSave={onSave}
           onClose={onCloseEditor}
+          onUploaded={onUploaded}
         />
       )}
 

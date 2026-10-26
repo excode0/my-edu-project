@@ -131,10 +131,12 @@ export function useCmsStudio({
       ...blankDraft,
       status: active === "submissions" ? "Baru" : active === "users" || active === "collections" ? "Terbit" : "Draf",
       fields: active === "users" ? "role: kontributor" : active === "items" && targetCollectionSlug ? `collection_slug: ${targetCollectionSlug}` : "",
-      itemData: createCollectionItemData(
-        data.records.collections.find((collection) => collection.slug === targetCollectionSlug)?.collectionFields ?? [],
-        [titleField, summaryField],
-      ),
+      itemData: active === "collections"
+        ? { hasPublicDetail: false }
+        : createCollectionItemData(
+          data.records.collections.find((collection) => collection.slug === targetCollectionSlug)?.collectionFields ?? [],
+          [titleField, summaryField],
+        ),
     })
   }
 
@@ -168,7 +170,9 @@ export function useCmsStudio({
       description: record.description,
       fields: active === "items" ? `collection_slug: ${record.collectionSlug || activeCollectionSlug || ""}` : record.fields,
       status: record.status,
-      itemData: record.itemData ?? {},
+      itemData: active === "collections"
+        ? { hasPublicDetail: record.hasPublicDetail ?? false }
+        : record.itemData ?? {},
     })
   }
 
@@ -271,6 +275,7 @@ export function useCmsStudio({
     canCreateRecord,
     canManageRecords,
     canPublishItems,
+    canUploadMedia: hasPermission(permissions, "media.upload"),
     records,
     visibleRecords,
     reload,

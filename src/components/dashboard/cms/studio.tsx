@@ -25,7 +25,7 @@ export function CmsStudio({ initialData, permissions, initialModule, collectionS
   const missingFeatureFields = activeCollection
     ? requiredCollectionFields.filter((key) => !activeCollection.collectionFields?.some((field) => field.key === key))
     : []
-  const collectionReady = active !== "items" || Boolean(activeCollection?.status === "Terbit" && ["content", "hybrid"].includes(activeCollection.collectionMode || "") && missingFeatureFields.length === 0)
+  const collectionReady = active !== "items" || Boolean(activeCollection?.status === "Terbit" && ["content", "hybrid"].includes(activeCollection.collectionMode || "") && activeCollection.hasPublicDetail && missingFeatureFields.length === 0)
   const collectionLabel = activeCollection?.title || activeCollectionSlug || "koleksi konten"
 
   return (
@@ -107,6 +107,7 @@ export function CmsStudio({ initialData, permissions, initialModule, collectionS
                   renderItemEditor={renderItemEditor}
                   canManage={cms.canManageRecords}
                   canPublish={cms.canPublishItems}
+                  canUploadMedia={cms.canUploadMedia}
                   records={cms.records}
                   visibleRecords={cms.visibleRecords}
                   query={cms.query}
@@ -133,7 +134,7 @@ export function CmsStudio({ initialData, permissions, initialModule, collectionS
               {active === "audit" && <CmsAuditLog entries={data.audit} />}
               {active === "items" && !collectionReady && (
                 <div role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  {missingFeatureFields.length ? <>Koleksi <strong>{collectionLabel}</strong> belum memiliki field fitur yang dibutuhkan: {missingFeatureFields.join(", ")}.</> : <>Koleksi <strong>{collectionLabel}</strong> belum tersedia, belum aktif, atau modenya bukan konten. Atur koleksi sebagai konten/hybrid dan aktifkan sebelum mengelola item.</>} <Link href="/dashboard/cms/collections" className="font-semibold underline underline-offset-2">Buka pengelolaan koleksi</Link>.
+                  {missingFeatureFields.length ? <>Koleksi <strong>{collectionLabel}</strong> belum memiliki field fitur yang dibutuhkan: {missingFeatureFields.join(", ")}.</> : activeCollection?.status === "Terbit" && !activeCollection.hasPublicDetail ? <>Koleksi <strong>{collectionLabel}</strong> belum mengaktifkan halaman detail publik, jadi berita tidak dapat ditautkan ke halaman artikelnya.</> : <>Koleksi <strong>{collectionLabel}</strong> belum tersedia, belum aktif, atau modenya bukan konten. Atur koleksi sebagai konten/hybrid dan aktifkan sebelum mengelola item.</>} <Link href="/dashboard/cms/collections" className="font-semibold underline underline-offset-2">Buka pengelolaan koleksi</Link>.
                 </div>
               )}
             </section>

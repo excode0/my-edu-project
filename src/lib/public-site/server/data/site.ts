@@ -7,6 +7,17 @@ function settingText(value: unknown) {
   return typeof value === "string" ? value : ""
 }
 
+function safeCollectionPrefix(value: string | null | undefined) {
+  return value?.startsWith("/") && !value.startsWith("//")
+    ? value.replace(/\/+$/, "") || "/"
+    : "/berita"
+}
+
+function collectionItemHref(prefix: string | null | undefined, slug: string) {
+  const safePrefix = safeCollectionPrefix(prefix)
+  return `${safePrefix === "/" ? "" : safePrefix}/${encodeURIComponent(slug)}`
+}
+
 function resolveMenuHref(item: {
   link_type: string
   external_url: string | null
@@ -33,7 +44,7 @@ function resolveMenuHref(item: {
 
 export const getPublicSiteData = cache(async function getPublicSiteData(): Promise<PublicSiteData> {
   const newsFeature = getContentBinding("news")
-  const [identityResult, settingsResult, newsResult, menuResult, admissionFieldsResult] = await Promise.all([
+  const [identityResult, settingsResult, newsResult, newsCollectionResult, menuResult, admissionFieldsResult] = await Promise.all([
     db.query<{
       nama_lembaga: string
       nama_singkat: string | null
@@ -57,6 +68,8 @@ export const getPublicSiteData = cache(async function getPublicSiteData(): Promi
       description: string
       fields: string
       updated_at: Date
+      url_prefix: string | null
+      has_public_detail: boolean
     }>(
       `SELECT ci.id, COALESCE(ci.data->>$2, ci.slug) AS title, ci.slug,
         COALESCE(ci.data->>$3, ci.data->>$4, '') AS description,
@@ -64,7 +77,7 @@ export const getPublicSiteData = cache(async function getPublicSiteData(): Promi
           CASE WHEN $5::text <> '' AND ci.data->>$5 IS NOT NULL THEN 'kategori: ' || (ci.data->>$5) END,
           CASE WHEN $6::text <> '' AND ci.data->>$6 IS NOT NULL THEN 'tanggal_terbit: ' || (ci.data->>$6) END
         ) AS fields,
-        COALESCE(ci.published_at, ci.updated_at) AS updated_at
+        COALESCE(ci.published_at, ci.updated_at) AS updated_at, c.url_prefix, c.has_public_detail
        FROM collection_items ci JOIN collections c ON c.id = ci.collection_id
        WHERE ci.status = 'published' AND ci.deleted_at IS NULL AND c.is_active = true
          AND c.deleted_at IS NULL AND c.slug = $1
@@ -78,6 +91,11 @@ export const getPublicSiteData = cache(async function getPublicSiteData(): Promi
         newsFeature?.categoryField ?? "kategori",
         newsFeature?.dateField ?? "tanggal_terbit",
       ],
+    ),
+    db.query<{ url_prefix: string | null }>(
+      `SELECT url_prefix FROM collections
+       WHERE slug = $1 AND is_active = true AND deleted_at IS NULL LIMIT 1`,
+      [newsFeature?.collectionSlug ?? "berita"],
     ),
     db.query<{
       label: string
@@ -112,6 +130,7 @@ export const getPublicSiteData = cache(async function getPublicSiteData(): Promi
   ])
   const settings = new Map(settingsResult.rows.map((row) => [row.key, row.value]))
   const identity = identityResult.rows[0]
+  const newsIndexHref = safeCollectionPrefix(newsCollectionResult.rows[0]?.url_prefix)
 
   return {
     identity: {
@@ -135,10 +154,12 @@ export const getPublicSiteData = cache(async function getPublicSiteData(): Promi
         slug: row.slug,
         description: row.description,
         fields: row.fields,
+        href: row.has_public_detail ? collectionItemHref(row.url_prefix, row.slug) : newsIndexHref,
         status: "Terbit",
         updatedAt: new Date(row.updated_at).toISOString(),
       })),
     },
+    newsIndexHref,
     navigation: menuResult.rows.map((item) => ({
       label: item.label,
       href: resolveMenuHref(item),

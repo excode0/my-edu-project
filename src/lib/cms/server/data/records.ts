@@ -7,7 +7,8 @@ import type { CmsRecordRow } from "@/types/type-cms-db"
 
 export async function loadCollections(): Promise<CmsRecord[]> {
   const result = await db.query<CmsRecordRow>(
-    `SELECT c.id, c.nama AS title, c.slug, c.mode::text AS collection_mode, c.deskripsi AS description,
+    `SELECT c.id, c.nama AS title, c.slug, c.mode::text AS collection_mode, c.url_prefix AS collection_url_prefix,
+      c.has_public_detail, c.deskripsi AS description,
       COALESCE(string_agg(
         cf.key || ':' || cf.field_type::text ||
         CASE WHEN cf.field_type IN ('select', 'multiselect') AND jsonb_typeof(cf.options) = 'array'
@@ -45,7 +46,8 @@ export async function loadItems(): Promise<CmsRecord[]> {
   const summaryExpression = summaryCases ? `CASE ${summaryCases} END` : "NULL::text"
   const result = await db.query<CmsRecordRow>(
     `SELECT ci.id, COALESCE(${titleExpression}, ci.data->>'judul', ci.slug) AS title,
-      ci.slug, c.slug AS collection_slug, ci.data AS item_data,
+      ci.slug, c.slug AS collection_slug, c.url_prefix AS collection_url_prefix,
+      c.has_public_detail, ci.data AS item_data,
       COALESCE(${summaryExpression}, ci.data->>'ringkasan', ci.data->>'isi', '') AS description,
       concat_ws(' · ',
         CASE WHEN ci.data->>'kategori' IS NOT NULL THEN 'kategori: ' || (ci.data->>'kategori') END,
