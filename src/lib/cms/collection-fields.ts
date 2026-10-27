@@ -1,5 +1,20 @@
 import type { CollectionFieldSchema, ContentBinding } from "@/types/type-cms"
 
+export function serializeCollectionFields(fields: CollectionFieldSchema[]) {
+  return fields.map((field) => {
+    const options = ["select", "multiselect"].includes(field.fieldType) && Array.isArray(field.options)
+      ? `[${field.options.map(String).join("|")}]`
+      : ""
+    return `${field.key}:${field.fieldType}${options}${field.required ? "!" : ""}`
+  }).join(", ")
+}
+
+export function collectionFieldSummary(fields: CollectionFieldSchema[] | undefined, limit = 4) {
+  if (!fields?.length) return "Belum ada field"
+  const labels = fields.slice(0, limit).map((field) => field.label).join(" · ")
+  return `${fields.length} field · ${labels}${fields.length > limit ? " · …" : ""}`
+}
+
 export function createCollectionItemData(fields: CollectionFieldSchema[], excludedKeys: (string | undefined)[]) {
   const excluded = new Set(excludedKeys.filter((key): key is string => Boolean(key)))
   return Object.fromEntries(

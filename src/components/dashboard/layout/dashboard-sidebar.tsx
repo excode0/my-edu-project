@@ -31,6 +31,9 @@ export function DashboardSidebar({
   permissions: string[]
 }) {
   const pathname = usePathname()
+  const visibleGroups = sidebarGroups.filter(
+    (group) => !group.permission || hasPermission(permissions, group.permission),
+  )
 
   return (
     <Sidebar collapsible="icon" className="border-r border-slate-200 bg-white">
@@ -50,7 +53,7 @@ export function DashboardSidebar({
           <SidebarGroupLabel>Navigasi</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {sidebarGroups.map((group) => {
+              {visibleGroups.map((group) => {
                 const Icon = group.icon
                 const visibleChildren = group.children?.filter(
                   (child) => !child.permission || hasPermission(permissions, child.permission),

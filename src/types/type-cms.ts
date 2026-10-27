@@ -13,7 +13,6 @@ export type Status = CmsStatus
 
 export type ModuleKey =
   | "overview"
-  | "identity"
   | "collections"
   | "items"
   | "pages"
@@ -25,13 +24,18 @@ export type ModuleKey =
   | "settings"
   | "audit"
 
-export type RecordKey = Exclude<ModuleKey, "overview" | "identity" | "settings" | "audit">
+export type RecordKey = Exclude<ModuleKey, "overview" | "settings" | "audit">
 
 export type CollectionFieldSchema = {
+  id?: string
   key: string
   label: string
   fieldType: string
   required: boolean
+  isUnique?: boolean
+  isListed?: boolean
+  isSearchable?: boolean
+  isFilterable?: boolean
   options: unknown
   defaultValue: unknown
   helpText: string
@@ -68,5 +72,6 @@ export type ContentBinding = {
   bodyField?: string
   categoryField?: string
   dateField?: string
+  imageField?: string
   requiredFields: string[]
 }

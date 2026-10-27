@@ -1,10 +1,38 @@
 import { cache } from "react"
 import { db } from "@/lib/db"
 import { contentBindings, getContentBindingForCollection } from "@/lib/cms/content-bindings"
-import type { PublicRouteData } from "@/types/type-public-site-view"
+import { isCmsImageSource } from "@/lib/cms/richtext-policy"
+import type { ContentBinding } from "@/types/type-cms"
+import type { PublicItemDetail, PublicRouteData } from "@/types/type-public-site-view"
 
 function settingText(value: unknown) {
   return typeof value === "string" ? value : ""
+}
+
+function buildItemDetails(
+  data: Record<string, unknown>,
+  fields: { key: string; label: string; fieldType: string; isListed: boolean }[],
+  feature: ContentBinding | undefined,
+): PublicItemDetail[] {
+  const excluded = new Set([
+    feature?.titleField,
+    feature?.summaryField,
+    feature?.bodyField,
+    feature?.categoryField,
+    feature?.dateField,
+    feature?.imageField,
+  ].filter((key): key is string => Boolean(key)))
+  return fields.flatMap((field) => {
+    if (!field.isListed || excluded.has(field.key) || ["media", "media_multiple", "richtext"].includes(field.fieldType)) return []
+    const value = data[field.key]
+    if (value === undefined || value === null || value === "") return []
+    if (Array.isArray(value)) {
+      return value.length ? [{ label: field.label, value: value.map(String).join(", ") }] : []
+    }
+    if (typeof value === "object") return []
+    if (typeof value === "boolean") return [{ label: field.label, value: value ? "Ya" : "Tidak" }]
+    return [{ label: field.label, value: String(value) }]
+  })
 }
 
 export const getPublicRoute = cache(async function getPublicRoute(path: string): Promise<PublicRouteData | null> {
@@ -71,28 +99,43 @@ export const getPublicRoute = cache(async function getPublicRoute(path: string):
     feature.bodyField ?? "isi",
     feature.categoryField ?? "kategori",
     feature.dateField ?? "tanggal_terbit",
+    feature.imageField ?? "",
   ])
   const itemFieldCase = (offset: number) => contentBindings.length
-    ? `CASE ${contentBindings.map((_, index) => `WHEN c.slug = $${index * 6 + 2} THEN ci.data->>$${index * 6 + offset}`).join(" ")} END`
+    ? `CASE ${contentBindings.map((_, index) => `WHEN c.slug = $${index * 7 + 2} THEN ci.data->>$${index * 7 + offset}`).join(" ")} END`
     : "NULL::text"
   const titleExpression = itemFieldCase(3)
   const summaryExpression = itemFieldCase(4)
   const bodyExpression = itemFieldCase(5)
   const categoryExpression = itemFieldCase(6)
   const dateExpression = itemFieldCase(7)
+  const imageExpression = itemFieldCase(8)
   const itemResult = await db.query<{
     title: string
     description: string
     body: string
     category: string
     published_at: string | Date
+    collection_slug: string
+    item_data: Record<string, unknown>
+    field_definitions: { key: string; label: string; fieldType: string; isListed: boolean }[]
+    image_url: string
   }>(
     `SELECT COALESCE(${titleExpression}, ci.data->>'judul', ci.slug) AS title,
        COALESCE(${summaryExpression}, ci.data->>'ringkasan', '') AS description,
        COALESCE(${bodyExpression}, ci.data->>'isi', '') AS body,
        COALESCE(${categoryExpression}, ci.data->>'kategori', '') AS category,
-       COALESCE(NULLIF(${dateExpression}, ''), ci.published_at::text, ci.updated_at::text) AS published_at
+       COALESCE(NULLIF(${dateExpression}, ''), ci.published_at::text, ci.updated_at::text) AS published_at,
+       c.slug AS collection_slug, ci.data AS item_data,
+       COALESCE((
+         SELECT jsonb_agg(jsonb_build_object(
+           'key', cf.key, 'label', cf.label, 'fieldType', cf.field_type::text, 'isListed', cf.is_listed
+         ) ORDER BY cf.sort_order, cf.label)
+         FROM collection_fields cf WHERE cf.collection_id = c.id
+       ), '[]'::jsonb) AS field_definitions,
+       COALESCE(img.public_url, '') AS image_url
      FROM collection_items ci JOIN collections c ON c.id = ci.collection_id
+     LEFT JOIN media img ON img.id::text = NULLIF(${imageExpression}, '')
      WHERE rtrim(c.url_prefix, '/') || '/' || ci.slug = $1
        AND ci.status = 'published' AND ci.deleted_at IS NULL
        AND c.has_public_detail = true AND c.is_active = true AND c.deleted_at IS NULL
@@ -101,16 +144,17 @@ export const getPublicRoute = cache(async function getPublicRoute(path: string):
     [path, ...itemFeatureValues],
   )
   const item = itemResult.rows[0]
-  return item
-    ? {
-        kind: "collection-item",
-        title: item.title,
-        description: item.description,
-        body: item.body,
-        category: item.category,
-        publishedAt: new Date(item.published_at).toISOString(),
-      }
-    : null
+  if (!item) return null
+  return {
+    kind: "collection-item",
+    title: item.title,
+    description: item.description,
+    body: item.body,
+    category: item.category,
+    publishedAt: new Date(item.published_at).toISOString(),
+    imageUrl: item.image_url && isCmsImageSource(item.image_url) ? item.image_url : undefined,
+    details: buildItemDetails(item.item_data, item.field_definitions, getContentBindingForCollection(item.collection_slug)),
+  }
 })
 
 async function getPublicCollection(id: string) {
@@ -160,11 +204,14 @@ async function getPublicCollectionList(collection: {
     slug: string
     description: string
     published_at: string | Date
+    image_url: string
   }>(
     `SELECT ci.id, COALESCE(ci.data->>$2, ci.slug) AS title, ci.slug,
        COALESCE(ci.data->>$3, ci.data->>$4, '') AS description,
-       COALESCE(NULLIF(ci.data->>$5, ''), ci.published_at::text, ci.updated_at::text) AS published_at
+       COALESCE(NULLIF(ci.data->>$5, ''), ci.published_at::text, ci.updated_at::text) AS published_at,
+       COALESCE(img.public_url, '') AS image_url
      FROM collection_items ci
+     LEFT JOIN media img ON img.id::text = NULLIF(ci.data->>$6, '')
      WHERE ci.collection_id = $1 AND ci.status = 'published' AND ci.deleted_at IS NULL
        AND (ci.published_at IS NULL OR ci.published_at <= now())
      ORDER BY COALESCE(NULLIF(ci.data->>$5, ''), ci.published_at::text, ci.updated_at::text) DESC LIMIT 100`,
@@ -174,6 +221,7 @@ async function getPublicCollectionList(collection: {
       feature?.summaryField ?? "ringkasan",
       feature?.bodyField ?? "isi",
       feature?.dateField ?? "tanggal_terbit",
+      feature?.imageField ?? "",
     ],
   )
   return {
@@ -188,6 +236,7 @@ async function getPublicCollectionList(collection: {
       slug: item.slug,
       description: item.description,
       publishedAt: new Date(item.published_at).toISOString(),
+      imageUrl: item.image_url && isCmsImageSource(item.image_url) ? item.image_url : undefined,
     })),
   }
 }

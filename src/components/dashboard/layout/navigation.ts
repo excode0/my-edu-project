@@ -1,9 +1,15 @@
-import { Database } from "lucide-react"
+import { Database, School } from "lucide-react"
 import type { SidebarChildConfig, SidebarGroupConfig } from "@/types/type-dashboard"
 import { getContentBinding } from "@/lib/cms/content-bindings"
 import { contentFeaturePresentations } from "@/components/dashboard/cms/content-presentations"
 
 export const sidebarGroups: SidebarGroupConfig[] = [
+  {
+    label: "Identitas Lembaga",
+    icon: School,
+    hrefBase: "/dashboard/identitas",
+    permission: "identitas.update",
+  },
   {
     label: "Konten Dinamis",
     icon: Database,
@@ -14,14 +20,17 @@ export const sidebarGroups: SidebarGroupConfig[] = [
         const binding = getContentBinding(presentation.key)
         return binding ? [{ label: presentation.label, href: presentation.route, permission: binding.permission }] : []
       }),
+      { label: "Media", href: "/dashboard/cms/media", permission: "media.upload" },
     ],
   },
 ]
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Koleksi",
+  "/dashboard/identitas": "Identitas Lembaga",
   "/dashboard/cms": "Konten Dinamis",
   "/dashboard/cms/collections": "Koleksi",
+  "/dashboard/cms/media": "Media",
   ...Object.fromEntries(contentFeaturePresentations.map((presentation) => [
     presentation.route,
     `Manajemen ${presentation.label.toLocaleLowerCase("id")}`,

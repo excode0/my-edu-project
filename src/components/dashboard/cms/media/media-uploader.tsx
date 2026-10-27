@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react"
 import { uploadCmsMedia } from "@/lib/cms/client/media-api"
+import { mediaAccept, mediaUploadHint } from "@/lib/media/upload-policy"
 
 export function MediaUploader({ onUploaded }: { onUploaded: () => Promise<void> }) {
   const [busy, setBusy] = useState(false)
@@ -17,14 +18,14 @@ export function MediaUploader({ onUploaded }: { onUploaded: () => Promise<void> 
     try {
       await uploadCmsMedia(new FormData(form))
       form.reset()
-      setNotice("Gambar berhasil diunggah dan disimpan di pustaka media.")
+      setNotice("Media berhasil diunggah dan disimpan di pustaka media.")
       try {
         await onUploaded()
       } catch {
-        setError("Gambar tersimpan, tetapi daftar media gagal diperbarui. Muat ulang data untuk melihatnya.")
+        setError("Media tersimpan, tetapi daftar media gagal diperbarui. Muat ulang data untuk melihatnya.")
       }
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Gambar tidak dapat diunggah.")
+      setError(uploadError instanceof Error ? uploadError.message : "Media tidak dapat diunggah.")
     } finally {
       setBusy(false)
     }
@@ -33,11 +34,11 @@ export function MediaUploader({ onUploaded }: { onUploaded: () => Promise<void> 
   return (
     <form onSubmit={upload} className="mb-4 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
       <label className="text-xs font-medium text-slate-700 md:col-span-2">
-        Unggah gambar (PNG, JPEG, WebP; maks. 5 MB)
+        Unggah media (gambar, video, audio, dokumen, atau arsip). {mediaUploadHint}
         <input
           name="file"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept={mediaAccept}
           required
           className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs file:mr-3 file:rounded-md file:border-0 file:bg-violet-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-violet-700"
         />

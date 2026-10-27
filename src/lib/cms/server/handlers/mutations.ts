@@ -3,7 +3,6 @@ import { ApiError } from "@/lib/cms/server/domain/errors"
 import { getPermission } from "@/lib/cms/server/domain/permissions"
 import { mutationSchema, type MutationInput } from "@/lib/cms/server/domain/schemas"
 import { createCollection, updateCollection } from "@/lib/cms/server/operations/collections"
-import { saveIdentity } from "@/lib/cms/server/operations/identity"
 import { saveItem } from "@/lib/cms/server/operations/items"
 import { saveNavigation } from "@/lib/cms/server/operations/navigation"
 import { savePage } from "@/lib/cms/server/operations/pages"
@@ -38,9 +37,7 @@ async function handleMutation(request: Request, method: "POST" | "PATCH") {
   if (authorization.response || !authorization.user) return authorization.response
 
   try {
-    if (body.module === "identity" && method === "PATCH" && body.identity) {
-      await saveIdentity(authorization.user, body.identity)
-    } else if (body.module === "settings" && method === "PATCH" && body.settings) {
+    if (body.module === "settings" && method === "PATCH" && body.settings) {
       await saveSettings(authorization.user, body.settings)
     } else if (body.module === "collections" && body.record) {
       if (method === "POST") await createCollection(authorization.user, body.record)

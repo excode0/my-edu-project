@@ -1,8 +1,10 @@
 import { Check, X } from "lucide-react"
 import { inputClassName, statusOptions } from "@/components/dashboard/cms/presentation"
 import { CmsTemplateConfigEditor } from "@/components/dashboard/cms/template-config-editor"
+import { serializeCollectionFields } from "@/lib/cms/collection-fields"
+import { CollectionFieldBuilder } from "./collection-field-builder"
 import { CmsCollectionFieldInput } from "./field-input"
-import { FieldSyntaxGuide } from "./field-syntax-guide"
+import { CmsSlugField } from "@/components/dashboard/cms/slug-field"
 import type { CmsItemEditor } from "./record-editor"
 import type {
   ModuleKey,
@@ -63,6 +65,8 @@ export function CmsRecordForm({
   const titleDefinition = collectionFields?.find((field) => field.key === titleField)
   const summaryDefinition = collectionFields?.find((field) => field.key === summaryField)
   const dynamicFields = collectionFields?.filter((field) => field.key !== titleField && field.key !== summaryField) ?? []
+  const slugLabel = active === "collections" ? "Slug koleksi" : active === "pages" ? "Slug halaman" : "Slug / key"
+  const canGenerateSlug = !isTemplate && !isSubmission && active !== "users" && active !== "navigation"
 
   return (
     <form onSubmit={onSave} className="mb-5 rounded-xl border border-violet-200 bg-violet-50/40 p-4">
@@ -73,44 +77,58 @@ export function CmsRecordForm({
       {active === "items" && renderItemEditor ? (
         renderItemEditor({ collectionFields, mediaRecords, draft, onDraftChange, canUploadMedia, onUploaded })
       ) : <div className="grid gap-3 md:grid-cols-2">
-        <label className="text-xs font-medium text-slate-700">{isTemplate ? "Nama registry" : isSubmission ? "Nama pendaftar" : active === "items" ? titleDefinition?.label || "Judul" : "Nama / judul"}<input required autoFocus value={draft.title} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, title: event.target.value }))} className={inputClassName()} /></label>
-        <label className="text-xs font-medium text-slate-700">{isSubmission ? "Kode referensi" : active === "users" ? "Email" : isTemplate ? "Key registry" : "Slug / key"}<input value={draft.slug} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className={inputClassName()} /></label>
-        {!(active === "items" && collectionFields && !summaryDefinition) && <label className="text-xs font-medium text-slate-700 md:col-span-2">{isSubmission ? "Catatan peninjauan" : active === "items" ? summaryDefinition?.label || "Ringkasan" : "Deskripsi / ringkasan"}<textarea rows={2} required={summaryDefinition?.required} value={draft.description} readOnly={readOnlyDescription} onChange={(event) => onDraftChange((current) => ({ ...current, description: event.target.value }))} className={inputClassName()} /></label>}
-        {active !== "templates" && active !== "items" && !isSubmission && (
-          active === "collections" ? (
-            <div className="text-xs font-medium text-slate-700 md:col-span-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <label htmlFor="collection-fields">Field koleksi</label>
-                <FieldSyntaxGuide />
-              </div>
-              <input
-                id="collection-fields"
-                value={draft.fields}
-                onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))}
-                placeholder="kategori:select[Akademik|Prestasi]!, minat:multiselect[Musik|Olahraga]"
-                className={inputClassName()}
-              />
-              <span className="mt-1 block font-normal leading-relaxed text-slate-500">
-                Pisahkan field dengan koma. Tambahkan <code className="font-mono text-slate-600">!</code> di akhir tipe untuk menandai wajib.
-              </span>
-            </div>
-          ) : (
-            <label className="text-xs font-medium text-slate-700 md:col-span-2">
-              Catatan / metadata
-              <input value={draft.fields} onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))} className={inputClassName()} />
-            </label>
-          )
+        <label className="text-xs font-medium text-slate-700">{isTemplate ? "Nama registry" : isSubmission ? "Nama pendaftar" : active === "items" ? titleDefinition?.label || "Judul" : active === "collections" ? "Nama koleksi" : "Nama / judul"}<input required autoFocus value={draft.title} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, title: event.target.value }))} className={inputClassName()} /></label>
+        {canGenerateSlug ? (
+          <CmsSlugField
+            label={slugLabel}
+            value={draft.slug}
+            sourceValue={draft.title}
+            sourceLabel={titleDefinition?.label || "judul"}
+            maxLength={active === "collections" ? 79 : active === "pages" ? 500 : 180}
+            onChange={(slug) => onDraftChange((current) => ({ ...current, slug }))}
+          />
+        ) : (
+          <label className="text-xs font-medium text-slate-700">{isSubmission ? "Kode referensi" : active === "users" ? "Email" : isTemplate ? "Key registry" : "Tautan / key"}<input value={draft.slug} readOnly={readOnlyIdentity} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className={inputClassName()} /></label>
+        )}
+        {!(active === "items" && collectionFields && !summaryDefinition) && <label className="text-xs font-medium text-slate-700 md:col-span-2">{isSubmission ? "Catatan peninjauan" : active === "items" ? summaryDefinition?.label || "Ringkasan" : active === "collections" ? "Deskripsi koleksi" : "Deskripsi / ringkasan"}<textarea rows={2} required={summaryDefinition?.required} value={draft.description} readOnly={readOnlyDescription} onChange={(event) => onDraftChange((current) => ({ ...current, description: event.target.value }))} className={inputClassName()} /></label>}
+        {active !== "templates" && active !== "items" && !isSubmission && active !== "collections" && (
+          <label className="text-xs font-medium text-slate-700 md:col-span-2">
+            Catatan / metadata
+            <input value={draft.fields} onChange={(event) => onDraftChange((current) => ({ ...current, fields: event.target.value }))} className={inputClassName()} />
+          </label>
         )}
         {active === "collections" && (
-          <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 text-xs md:col-span-2">
-            <input
-              type="checkbox"
-              checked={draft.itemData?.hasPublicDetail === true}
-              onChange={(event) => onDraftChange((current) => ({ ...current, itemData: { ...(current.itemData ?? {}), hasPublicDetail: event.target.checked } }))}
-              className="mt-0.5 size-4 accent-violet-700"
+          <>
+            <div className="grid gap-3 md:col-span-2 md:grid-cols-2">
+              <label className="text-xs font-medium text-slate-700">
+                Mode koleksi
+                <select value={draft.collectionMode ?? "content"} onChange={(event) => onDraftChange((current) => ({ ...current, collectionMode: event.target.value }))} className={inputClassName()}>
+                  <option value="content">Konten</option>
+                  <option value="hybrid">Konten + formulir</option>
+                  <option value="form">Formulir</option>
+                </select>
+                <span className="mt-1 block font-normal leading-relaxed text-slate-500">Konten untuk artikel, galeri, dan halaman dinamis. Formulir untuk penerimaan atau pendaftaran. Mode gabungan mendukung keduanya.</span>
+              </label>
+              <label className="text-xs font-medium text-slate-700">
+                Alamat publik
+                <input value={draft.collectionUrlPrefix ?? ""} onChange={(event) => onDraftChange((current) => ({ ...current, collectionUrlPrefix: event.target.value }))} placeholder={`/${draft.slug || "nama-koleksi"}`} pattern="^/?[a-zA-Z0-9][a-zA-Z0-9/-]*$" className={`${inputClassName()} font-mono`} />
+                <span className="mt-1 block font-normal leading-relaxed text-slate-500">Kosongkan untuk memakai slug otomatis. Contoh: <code className="font-mono">/berita</code> atau <code className="font-mono">/profil/prestasi</code>.</span>
+              </label>
+            </div>
+            <CollectionFieldBuilder
+              fields={draft.collectionFields ?? []}
+              onChange={(collectionFields) => onDraftChange((current) => ({ ...current, collectionFields, fields: serializeCollectionFields(collectionFields) }))}
             />
-            <span><span className="block font-semibold text-slate-700">Aktifkan halaman detail publik</span><span className="mt-1 block font-normal leading-relaxed text-slate-500">Izinkan pengunjung membuka URL untuk setiap item. Aktifkan untuk koleksi seperti berita yang memiliki halaman artikel.</span></span>
-          </label>
+            <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 text-xs md:col-span-2">
+              <input
+                type="checkbox"
+                checked={draft.itemData?.hasPublicDetail === true}
+                onChange={(event) => onDraftChange((current) => ({ ...current, itemData: { ...(current.itemData ?? {}), hasPublicDetail: event.target.checked } }))}
+                className="mt-0.5 size-4 accent-violet-700"
+              />
+              <span><span className="block font-semibold text-slate-700">Aktifkan halaman detail publik</span><span className="mt-1 block font-normal leading-relaxed text-slate-500">Izinkan pengunjung membuka URL untuk setiap item. Aktifkan untuk koleksi seperti berita yang memiliki halaman artikel.</span></span>
+            </label>
+          </>
         )}
         {active === "items" && dynamicFields.map((field) => (
           <label key={field.key} htmlFor={`item-field-${field.key}`} className="text-xs font-medium text-slate-700 md:col-span-2">

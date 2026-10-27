@@ -2,7 +2,9 @@ import { useState } from "react"
 import { CalendarDays, Eye, ImagePlus, Newspaper, PencilLine } from "lucide-react"
 import Image from "next/image"
 import { CmsCollectionFieldInput } from "@/components/dashboard/cms/koleksi/field-input"
+import { CmsSlugField } from "@/components/dashboard/cms/slug-field"
 import { resolveContentEditorFields } from "@/lib/cms/collection-fields"
+import { cmsUploadMediaKind } from "@/lib/cms/richtext-policy"
 import { CmsNewsBodyEditor } from "./body-editor"
 import { sanitizeCmsEditorHtml } from "./sanitize-editor-html"
 import type { CollectionFieldSchema, ContentBinding } from "@/types/type-cms"
@@ -32,6 +34,7 @@ export function CmsNewsEditor({
   const heroField = otherFields.find((field) => field.fieldType === "media")
   const heroMediaId = heroField ? itemData[heroField.key] : undefined
   const heroMedia = typeof heroMediaId === "string" ? media.find((item) => item.id === heroMediaId) : undefined
+  const heroKind = heroMedia ? cmsUploadMediaKind(heroMedia.slug) : null
   const articleBody = bodyField && typeof itemData[bodyField.key] === "string" ? itemData[bodyField.key] as string : ""
 
   function updateField(key: string, value: unknown) {
@@ -46,7 +49,8 @@ export function CmsNewsEditor({
       </div>
       {preview ? (
         <article className="mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {heroMedia && <Image src={heroMedia.slug} alt={draft.title} width={1200} height={460} unoptimized className="max-h-[460px] w-full object-cover" />}
+          {heroMedia && heroKind === "image" && <Image src={heroMedia.slug} alt={draft.title} width={1200} height={460} unoptimized className="max-h-[460px] w-full object-cover" />}
+          {heroMedia && heroKind === "video" && <video src={heroMedia.slug} controls playsInline className="max-h-[460px] w-full bg-black object-contain" />}
           <div className="p-6 sm:p-10">
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
               {categoryField && typeof itemData[categoryField.key] === "string" && <span className="rounded-full bg-violet-50 px-3 py-1 font-semibold text-violet-700">{itemData[categoryField.key] as string}</span>}
@@ -54,7 +58,7 @@ export function CmsNewsEditor({
             </div>
             <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-950 sm:text-4xl">{draft.title || "Judul berita"}</h1>
             {draft.description && <p className="mt-4 border-b border-slate-100 pb-6 text-base leading-7 text-slate-600">{draft.description}</p>}
-            {articleBody ? <div className="prose prose-slate mt-7 max-w-none [&_figure]:my-6 [&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-xs [&_figcaption]:text-slate-500 [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-lg [&_img]:mx-auto [&_img]:max-h-[560px] [&_img]:rounded-lg [&_img]:object-contain" dangerouslySetInnerHTML={{ __html: sanitizeCmsEditorHtml(articleBody) }} /> : <p className="mt-7 text-sm text-slate-400">Isi berita belum ditulis.</p>}
+            {articleBody ? <div className="cms-rich-text prose prose-slate mt-7 max-w-none text-sm leading-7 [&_a]:text-violet-700 [&_a]:underline [&_audio]:my-4 [&_audio]:w-full [&_blockquote]:border-l-2 [&_blockquote]:border-violet-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-xs [&_figcaption]:text-slate-500 [&_figure]:my-6 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-lg [&_img]:mx-auto [&_img]:max-h-[560px] [&_img]:rounded-lg [&_img]:object-contain [&_li]:ml-5 [&_li]:list-disc [&_ol>li]:list-decimal [&_p]:my-3 [&_video]:my-5 [&_video]:max-h-[560px] [&_video]:w-full [&_video]:rounded-lg [&_video]:bg-black" dangerouslySetInnerHTML={{ __html: sanitizeCmsEditorHtml(articleBody) }} /> : <p className="mt-7 text-sm text-slate-400">Isi berita belum ditulis.</p>}
           </div>
         </article>
       ) : <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -81,7 +85,14 @@ export function CmsNewsEditor({
         <aside className="space-y-4">
           <section className="rounded-xl border border-slate-200 p-4">
             <div className="mb-3 flex items-center gap-2"><Newspaper className="size-4 text-violet-700" /><h3 className="text-xs font-semibold text-slate-800">Publikasi</h3></div>
-            <label className="block text-xs font-medium text-slate-700">Slug berita<input readOnly value={draft.slug} onChange={(event) => onDraftChange((current) => ({ ...current, slug: event.target.value }))} className="mt-1.5 h-9 w-full rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-violet-400" placeholder="dibuat-dari-judul" /></label>
+            <CmsSlugField
+              label="Slug berita"
+              value={draft.slug}
+              sourceValue={draft.title}
+              sourceLabel="judul"
+              maxLength={180}
+              onChange={(slug) => onDraftChange((current) => ({ ...current, slug }))}
+            />
             {dateField && <label className="mt-3 block text-xs font-medium text-slate-700"><span className="flex items-center gap-1.5"><CalendarDays className="size-3.5 text-slate-400" />{dateField.label}{dateField.required && <span className="text-rose-600">*</span>}</span><div className="mt-1.5"><CmsCollectionFieldInput field={dateField} value={itemData[dateField.key]} onChange={(value) => updateField(dateField.key, value)} /></div></label>}
           </section>
 

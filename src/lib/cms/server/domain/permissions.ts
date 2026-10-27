@@ -1,7 +1,6 @@
 import type { CmsModule } from "./constants"
 
 export function getPermission(module: CmsModule, method: string, status?: string) {
-  if (module === "identity") return "identitas.update"
   if (module === "settings") return "settings.manage"
   if (module === "users") return "user.manage"
   if (module === "submissions") return "submission.update"

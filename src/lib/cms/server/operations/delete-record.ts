@@ -19,6 +19,24 @@ export async function deleteRecord(user: AuthUser, module: CmsModule, id: string
       return
     }
     if (module === "collections") {
+      const references = await client.query<{ items: string; submissions: string; templates: string; menus: string }>(
+        `SELECT
+           (SELECT count(*) FROM collection_items WHERE collection_id = $1 AND deleted_at IS NULL) AS items,
+           (SELECT count(*) FROM form_submissions WHERE collection_id = $1) AS submissions,
+           (SELECT count(*) FROM template_configs WHERE collection_id = $1) AS templates,
+           (SELECT count(*) FROM menu_items WHERE collection_id = $1) AS menus`,
+        [id],
+      )
+      const counts = references.rows[0]
+      if (counts && (Number(counts.items) > 0 || Number(counts.submissions) > 0 || Number(counts.templates) > 0 || Number(counts.menus) > 0)) {
+        const parts = [
+          Number(counts.items) > 0 ? `${counts.items} item konten` : "",
+          Number(counts.submissions) > 0 ? `${counts.submissions} pendaftar` : "",
+          Number(counts.templates) > 0 ? `${counts.templates} konfigurasi template` : "",
+          Number(counts.menus) > 0 ? `${counts.menus} menu` : "",
+        ].filter(Boolean)
+        throw new ApiError(`Koleksi masih dipakai oleh ${parts.join(", ")}. Hapus atau lepaskan referensinya terlebih dahulu.`, 409)
+      }
       const result = await client.query("UPDATE collections SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL RETURNING id, slug", [id])
       if (!result.rowCount) throw new ApiError("Koleksi tidak ditemukan.", 404)
       await writeAudit(client, user, "collection.delete", "collections", id, result.rows[0], null)
@@ -33,10 +51,14 @@ export async function deleteRecord(user: AuthUser, module: CmsModule, id: string
     if (module === "media") {
       const references = await client.query(
         `SELECT
-          (SELECT count(*) FROM collection_item_media WHERE media_id = $1) +
+          (SELECT count(*) FROM collection_item_media cim
+            JOIN collection_items ci ON ci.id = cim.item_id AND ci.deleted_at IS NULL
+            WHERE cim.media_id = $1) +
           (SELECT count(*) FROM site_identities WHERE logo_media_id = $1 OR favicon_media_id = $1 OR hero_media_id = $1) +
-          (SELECT count(*) FROM pages WHERE seo_og_media_id = $1) +
-          (SELECT count(*) FROM collection_items WHERE seo_og_media_id = $1) AS count`,
+          (SELECT count(*) FROM pages WHERE seo_og_media_id = $1 AND deleted_at IS NULL) +
+          (SELECT count(*) FROM collection_items WHERE seo_og_media_id = $1 AND deleted_at IS NULL) +
+          (SELECT count(*) FROM users WHERE avatar_media_id = $1 AND deleted_at IS NULL) +
+          (SELECT count(*) FROM templates WHERE thumbnail_media_id = $1) AS count`,
         [id],
       )
       if (Number(references.rows[0]?.count) > 0) throw new ApiError("Media masih dipakai oleh konten; lepaskan referensi sebelum menghapus.", 409)

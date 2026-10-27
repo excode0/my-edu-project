@@ -1,6 +1,8 @@
 import { Suspense } from "react"
 import { getPublicSiteData } from "@/lib/public-site/server/data"
 import { HomeAbout } from "./home-about"
+import { HomeExtracurriculars } from "./home-extracurriculars"
+import { HomeFacilities } from "./home-facilities"
 import { HomeFooter } from "./home-footer"
 import { HomeHeader } from "./home-header"
 import { HomeHero } from "./home-hero"
@@ -32,8 +34,10 @@ async function PublicHome() {
         admissionStatus={cms.settings.admissionStatus}
       />
       <HomeAbout schoolName={schoolName} vision={cms?.identity.vision || ""} />
-      <HomePrograms />
-      <HomeNews news={publicNews} indexHref={cms.newsIndexHref} />
+      <HomePrograms programs={cms.programs} indexHref={cms.programsIndexHref} />
+      <HomeExtracurriculars items={cms.extracurriculars} indexHref={cms.extracurricularsIndexHref} />
+      <HomeFacilities items={cms.facilities} indexHref={cms.facilitiesIndexHref} />
+      <HomeNews news={publicNews} indexHref={cms.newsIndexHref} achievements={cms.achievements} achievementsIndexHref={cms.achievementsIndexHref} />
       <HomeAdmission
         admissionEnabled={cms.settings.admissionEnabled}
         fields={cms.admissionFields}

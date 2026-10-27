@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
@@ -55,7 +56,12 @@ async function PublicContent({ params }: PublicContentProps) {
         {route.kind === "collection-list" && (
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {route.items.length ? route.items.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-slate-200 p-5">
+              <article key={item.id} className="overflow-hidden rounded-2xl border border-slate-200 p-5">
+                {item.imageUrl && (
+                  <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
+                    <Image src={item.imageUrl} alt={item.title} fill sizes="(min-width: 640px) 40vw, 90vw" unoptimized className="object-cover" />
+                  </div>
+                )}
                 <h2 className="text-lg font-semibold text-slate-900">
                   {route.prefix && route.hasPublicDetail ? (
                     <Link href={`${route.prefix}/${encodeURIComponent(item.slug)}`} className="hover:text-violet-700">{item.title}</Link>
@@ -78,7 +84,22 @@ async function PublicContent({ params }: PublicContentProps) {
                 {new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(route.publishedAt))}
               </time>
             </div>
-            <div className="prose prose-slate mt-6 max-w-none text-sm leading-7" dangerouslySetInnerHTML={{ __html: safeBody }} />
+            {route.imageUrl && (
+              <div className="relative mt-6 aspect-[16/10] overflow-hidden rounded-2xl bg-slate-100">
+                <Image src={route.imageUrl} alt={route.title} fill sizes="(min-width: 768px) 768px, 90vw" unoptimized className="object-cover" />
+              </div>
+            )}
+            {route.details.length > 0 && (
+              <dl className="mt-6 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-2">
+                {route.details.map((detail) => (
+                  <div key={detail.label}>
+                    <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{detail.label}</dt>
+                    <dd className="mt-1 text-sm font-medium text-slate-800">{detail.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <div className="cms-rich-text prose prose-slate mt-6 max-w-none text-sm leading-7 [&_a]:text-violet-700 [&_a]:underline [&_audio]:my-4 [&_audio]:w-full [&_blockquote]:border-l-2 [&_blockquote]:border-violet-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-xs [&_figcaption]:text-slate-500 [&_figure]:my-6 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-lg [&_img]:mx-auto [&_img]:max-h-[560px] [&_img]:rounded-lg [&_img]:object-contain [&_li]:ml-5 [&_li]:list-disc [&_ol>li]:list-decimal [&_p]:my-3 [&_video]:my-5 [&_video]:max-h-[560px] [&_video]:w-full [&_video]:rounded-lg [&_video]:bg-black" dangerouslySetInnerHTML={{ __html: safeBody }} />
           </article>
         )}
 

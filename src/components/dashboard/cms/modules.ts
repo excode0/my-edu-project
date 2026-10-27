@@ -7,7 +7,6 @@ import {
   LayoutTemplate,
   Menu,
   Newspaper,
-  School,
   Settings2,
   ShieldCheck,
   Users,
@@ -18,11 +17,10 @@ import type { CmsModuleView, ModulePresentation } from "@/types/type-cms-ui"
 
 const presentations: Record<ModuleKey, Omit<ModulePresentation, "key">> = {
   overview: { label: "Ringkasan", description: "Ikhtisar konten dan aktivitas website.", icon: Activity },
-  identity: { label: "Identitas lembaga", description: "Data dasar, alamat, kontak, dan profil lembaga.", icon: School },
   collections: { label: "Koleksi & konten", description: "Definisi koleksi, field, dan item konten.", icon: FolderKanban, noun: "koleksi" },
   items: { label: "Artikel & agenda", description: "Item berita yang tampil di website publik.", icon: Newspaper, noun: "artikel" },
   pages: { label: "Halaman", description: "Halaman profil, landing page, dan status publikasi.", icon: FileText, noun: "halaman" },
-  media: { label: "Media", description: "Pustaka gambar, dokumen, dan file website.", icon: FileImage, noun: "media" },
+  media: { label: "Media", description: "Pustaka gambar, video, audio, dokumen, dan file website.", icon: FileImage, noun: "media" },
   templates: { label: "Template & binding", description: "Registry tampilan, varian, dan pemetaan field.", icon: LayoutTemplate, noun: "template" },
   navigation: { label: "Navigasi", description: "Susunan menu header dan footer website.", icon: Menu, noun: "tautan menu" },
   submissions: { label: "Form PPDB", description: "Data pendaftar dan tahapan peninjauan.", icon: BookOpen, noun: "pendaftar" },

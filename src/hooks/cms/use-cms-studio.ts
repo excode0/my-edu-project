@@ -58,6 +58,8 @@ export function useCmsStudio({
   const [notice, setNotice] = useState("")
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("Semua status")
+  const [collectionModeFilter, setCollectionModeFilter] = useState("Semua mode")
+  const [collectionDetailFilter, setCollectionDetailFilter] = useState("Semua halaman detail")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<RecordDraft>(blankDraft)
   const [userPassword, setUserPassword] = useState("")
@@ -116,11 +118,13 @@ export function useCmsStudio({
     [active, activeCollectionSlug, activeModule.recordKey, data.records],
   )
   const visibleRecords = useMemo(() => records.filter((record) => {
-    const matchesQuery = `${record.title} ${record.slug} ${record.description} ${record.fields} ${JSON.stringify(record.itemData ?? {})}`
+    const matchesQuery = `${record.title} ${record.slug} ${record.description} ${record.fields} ${record.collectionUrlPrefix ?? ""} ${record.collectionMode ?? ""} ${JSON.stringify(record.itemData ?? {})} ${JSON.stringify(record.collectionFields ?? [])}`
       .toLocaleLowerCase("id")
       .includes(query.toLocaleLowerCase("id"))
-    return matchesQuery && (statusFilter === "Semua status" || record.status === statusFilter)
-  }), [query, records, statusFilter])
+    const matchesMode = active !== "collections" || collectionModeFilter === "Semua mode" || record.collectionMode === collectionModeFilter
+    const matchesDetail = active !== "collections" || collectionDetailFilter === "Semua halaman detail" || (record.hasPublicDetail ? "Aktif" : "Nonaktif") === collectionDetailFilter
+    return matchesQuery && matchesMode && matchesDetail && (statusFilter === "Semua status" || record.status === statusFilter)
+  }), [active, collectionDetailFilter, collectionModeFilter, query, records, statusFilter])
 
   function openNewRecord() {
     setEditingId("")
@@ -131,6 +135,9 @@ export function useCmsStudio({
       ...blankDraft,
       status: active === "submissions" ? "Baru" : active === "users" || active === "collections" ? "Terbit" : "Draf",
       fields: active === "users" ? "role: kontributor" : active === "items" && targetCollectionSlug ? `collection_slug: ${targetCollectionSlug}` : "",
+      collectionFields: active === "collections" ? [] : undefined,
+      collectionMode: active === "collections" ? "content" : undefined,
+      collectionUrlPrefix: active === "collections" ? "" : undefined,
       itemData: active === "collections"
         ? { hasPublicDetail: false }
         : createCollectionItemData(
@@ -169,6 +176,9 @@ export function useCmsStudio({
       slug: record.slug,
       description: record.description,
       fields: active === "items" ? `collection_slug: ${record.collectionSlug || activeCollectionSlug || ""}` : record.fields,
+      collectionFields: active === "collections" ? record.collectionFields ?? [] : undefined,
+      collectionMode: active === "collections" ? record.collectionMode ?? "content" : undefined,
+      collectionUrlPrefix: active === "collections" ? record.collectionUrlPrefix ?? `/${record.slug}` : undefined,
       status: record.status,
       itemData: active === "collections"
         ? { hasPublicDetail: record.hasPublicDetail ?? false }
@@ -217,6 +227,7 @@ export function useCmsStudio({
     const updated = {
       ...record,
       fields: active === "items" ? `collection_slug: ${record.collectionSlug || activeCollectionSlug || ""}` : record.fields,
+      itemData: active === "collections" ? { hasPublicDetail: record.hasPublicDetail === true } : record.itemData,
       status: nextStatus,
     }
     void persist(active, "PATCH", { id: record.id, record: updated }, `Status "${record.title}" diperbarui.`)
@@ -225,11 +236,6 @@ export function useCmsStudio({
   function deleteRecord(record: CmsRecord) {
     if (!activeModule.recordKey || !window.confirm(`Hapus "${record.title}"?`)) return
     void persist(active, "DELETE", { id: record.id }, `"${record.title}" dihapus.`)
-  }
-
-  function saveIdentity(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    void persist("identity", "PATCH", { identity: data.identity }, "Identitas tersimpan.")
   }
 
   function saveSettings(event: React.FormEvent<HTMLFormElement>) {
@@ -258,6 +264,10 @@ export function useCmsStudio({
     setQuery,
     statusFilter,
     setStatusFilter,
+    collectionModeFilter,
+    setCollectionModeFilter,
+    collectionDetailFilter,
+    setCollectionDetailFilter,
     editingId,
     setEditingId,
     draft,
@@ -285,7 +295,6 @@ export function useCmsStudio({
     saveRecord,
     updateRecordStatus,
     deleteRecord,
-    saveIdentity,
     saveSettings,
     countRecords,
     totalItems,

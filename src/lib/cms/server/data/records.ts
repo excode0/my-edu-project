@@ -10,7 +10,7 @@ export async function loadCollections(): Promise<CmsRecord[]> {
     `SELECT c.id, c.nama AS title, c.slug, c.mode::text AS collection_mode, c.url_prefix AS collection_url_prefix,
       c.has_public_detail, c.deskripsi AS description,
       COALESCE(string_agg(
-        cf.key || ':' || cf.field_type::text ||
+        cf.label || ':' || cf.field_type::text ||
         CASE WHEN cf.field_type IN ('select', 'multiselect') AND jsonb_typeof(cf.options) = 'array'
           THEN '[' || array_to_string(ARRAY(SELECT jsonb_array_elements_text(cf.options)), '|') || ']'
           ELSE '' END ||
@@ -18,9 +18,11 @@ export async function loadCollections(): Promise<CmsRecord[]> {
         ', ' ORDER BY cf.sort_order, cf.key
       ), '') AS fields,
       COALESCE(jsonb_agg(jsonb_build_object(
-        'key', cf.key, 'label', cf.label, 'fieldType', cf.field_type::text,
-        'required', cf.is_required, 'options', cf.options,
-        'defaultValue', cf.default_value, 'helpText', cf.help_text, 'validation', cf.validation
+        'id', cf.id, 'key', cf.key, 'label', cf.label, 'fieldType', cf.field_type::text,
+        'required', cf.is_required, 'isUnique', cf.is_unique, 'isListed', cf.is_listed,
+        'isSearchable', cf.is_searchable, 'isFilterable', cf.is_filterable,
+        'options', cf.options, 'defaultValue', cf.default_value, 'helpText', cf.help_text,
+        'validation', cf.validation
       ) ORDER BY cf.sort_order, cf.key) FILTER (WHERE cf.id IS NOT NULL), '[]'::jsonb) AS collection_fields,
       CASE WHEN c.is_active THEN 'published' ELSE 'draft' END AS status, c.updated_at
      FROM collections c LEFT JOIN collection_fields cf ON cf.collection_id = c.id

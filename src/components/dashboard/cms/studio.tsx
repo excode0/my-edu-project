@@ -4,7 +4,6 @@ import Link from "next/link"
 import { Archive, ArrowUpRight, Plus, ShieldCheck, X } from "lucide-react"
 import { useCmsStudio } from "@/hooks/cms/use-cms-studio"
 import { CmsAuditLog } from "./audit-log"
-import { CmsIdentityForm } from "./identity-form"
 import { CmsOverview } from "./overview"
 import { CmsSettingsForm } from "./settings-form"
 import { CmsRecordWorkspace } from "./koleksi/record-workspace"
@@ -75,15 +74,6 @@ export function CmsStudio({ initialData, permissions, initialModule, collectionS
                 <CmsOverview data={data} totalItems={cms.totalItems} countRecords={cms.countRecords} permissions={permissions} />
               )}
 
-              {active === "identity" && (
-                <CmsIdentityForm
-                  identity={data.identity}
-                  canManage={cms.canManageRecords}
-                  onChange={(identity) => setData((current) => ({ ...current, identity }))}
-                  onSubmit={cms.saveIdentity}
-                />
-              )}
-
               {active === "settings" && (
                 <div className="grid gap-6">
                   <CmsSettingsForm
@@ -114,6 +104,10 @@ export function CmsStudio({ initialData, permissions, initialModule, collectionS
                   onQueryChange={cms.setQuery}
                   statusFilter={cms.statusFilter}
                   onStatusFilterChange={cms.setStatusFilter}
+                  collectionModeFilter={cms.collectionModeFilter}
+                  onCollectionModeFilterChange={cms.setCollectionModeFilter}
+                  collectionDetailFilter={cms.collectionDetailFilter}
+                  onCollectionDetailFilterChange={cms.setCollectionDetailFilter}
                   editingId={cms.editingId}
                   draft={cms.draft}
                   onDraftChange={cms.setDraft}

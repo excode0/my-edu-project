@@ -10,5 +10,6 @@ export type SidebarGroupConfig = {
   label: string
   icon: LucideIcon
   hrefBase: string
+  permission?: string
   children?: SidebarChildConfig[]
 }

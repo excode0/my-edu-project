@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react"
 import type { CmsModuleEngineDefinition, ModuleKey } from "./type-cms"
-import type { CmsData, CmsRecord } from "./type-cms-api"
+import type { CmsRecord } from "./type-cms-api"
 
 export type RecordDraft = Omit<CmsRecord, "id" | "updatedAt">
 
@@ -29,18 +29,4 @@ export type ContentFeaturePresentation = {
   noun?: string
   description: string
   route: string
-}
-
-export type CmsIdentityField = {
-  key: keyof CmsData["identity"]
-  label: string
-  type?: "text" | "email" | "url" | "tel"
-  required?: boolean
-  multiline?: boolean
-}
-
-export type CmsIdentityFieldGroup = {
-  title: string
-  description: string
-  fields: CmsIdentityField[]
 }

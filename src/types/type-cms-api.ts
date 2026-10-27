@@ -1,4 +1,5 @@
 import type { CmsStatus, CollectionFieldSchema, RecordKey, TemplateEditorConfig } from "./type-cms"
+import type { MediaKind } from "./type-media"
 
 export type CmsRecord = {
   id: string
@@ -18,30 +19,6 @@ export type CmsRecord = {
 
 export type CmsData = {
   records: Record<RecordKey, CmsRecord[]>
-  identity: {
-    name: string
-    shortName: string
-    level: string
-    accreditation: string
-    address: string
-    phone: string
-    email: string
-    vision: string
-    slogan?: string
-    npsn?: string
-    nss?: string
-    tahunBerdiri?: string
-    sejarahSingkat?: string
-    misi?: string
-    kelurahan?: string
-    kecamatan?: string
-    kota?: string
-    provinsi?: string
-    kodePos?: string
-    whatsapp?: string
-    website?: string
-    kepalaLembaga?: string
-  }
   settings: {
     siteTitle: string
     description: string
@@ -57,4 +34,6 @@ export type CmsMediaUploadResult = {
   publicUrl: string
   mimeType: string
   sizeBytes: number
+  kind: MediaKind
+  extension: string
 }

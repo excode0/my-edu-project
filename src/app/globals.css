@@ -130,6 +130,109 @@
   }
 }
 
+@layer components {
+  .cms-rich-text table {
+    width: 100%;
+    margin: 1rem 0;
+    border-collapse: collapse;
+    table-layout: auto;
+    font-size: 0.875em;
+    line-height: 1.5;
+  }
+
+  .cms-rich-text th,
+  .cms-rich-text td {
+    min-width: 6rem;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .cms-rich-text th {
+    background-color: #f8fafc;
+    font-weight: 600;
+  }
+
+  .cms-rich-text tbody tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+
+  .cms-rich-text pre {
+    min-height: 3.25rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    background-color: #0f172a;
+    padding: 0.875rem 1rem;
+    color: #e2e8f0;
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    white-space: pre;
+  }
+
+  .cms-rich-text pre code {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+  }
+
+  .cms-rich-text :not(pre) > code {
+    border-radius: 0.35rem;
+    background-color: #f1f5f9;
+    padding: 0.1rem 0.35rem;
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 0.875em;
+  }
+
+  .cms-rich-text hr {
+    margin: 1.5rem 0;
+    border: 0;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .cms-rich-text::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  .cms-rich-text figure {
+    max-width: 100%;
+  }
+
+  .cms-rich-text figure[style*="float"] figcaption {
+    text-align: left;
+  }
+
+  .cms-rich-text figure > img,
+  .cms-rich-text figure > video,
+  .cms-rich-text figure > iframe {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .cms-rich-text figure > audio {
+    width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    .cms-rich-text figure[style*="float"] {
+      float: none !important;
+      width: 100% !important;
+      margin: 1rem 0 !important;
+    }
+
+    .cms-rich-text figure[style*="float"] figcaption {
+      text-align: center;
+    }
+  }
+}
+
 html[data-school-theme] .site-public .bg-violet-700,
 html[data-school-theme] .site-public .bg-violet-600 {
   background-color: var(--school-accent);

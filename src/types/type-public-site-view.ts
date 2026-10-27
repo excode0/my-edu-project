@@ -6,6 +6,12 @@ export type PublicListItem = {
   slug: string
   description: string
   publishedAt: string
+  imageUrl?: string
+}
+
+export type PublicItemDetail = {
+  label: string
+  value: string
 }
 
 export type HomeNewsItem = {
@@ -17,10 +23,21 @@ export type HomeNewsItem = {
   updatedAt: string
 }
 
+export type HomeCollectionItem = {
+  id: string
+  title: string
+  description: string
+  href: string
+  imageUrl?: string
+  meta?: string
+  category?: string
+  date?: string
+}
+
 export type PublicRouteData =
   | { kind: "page"; title: string; description: string; fields: string }
   | { kind: "collection-list"; title: string; description: string; prefix: string; hasPublicDetail: boolean; items: PublicListItem[] }
-  | { kind: "collection-item"; title: string; description: string; body: string; category: string; publishedAt: string }
+  | { kind: "collection-item"; title: string; description: string; body: string; category: string; publishedAt: string; imageUrl?: string; details: PublicItemDetail[] }
   | { kind: "admission"; title: string; description: string }
 
 export type PublicSiteData = {
@@ -51,6 +68,14 @@ export type PublicSiteData = {
     }[]
   }
   newsIndexHref: string
+  programsIndexHref: string
+  extracurricularsIndexHref: string
+  facilitiesIndexHref: string
+  achievementsIndexHref: string
+  programs: HomeCollectionItem[]
+  extracurriculars: HomeCollectionItem[]
+  facilities: HomeCollectionItem[]
+  achievements: HomeCollectionItem[]
   navigation: { label: string; href: string }[]
   admissionFields: AdmissionField[]
 }

@@ -1,7 +1,7 @@
 import "server-only"
 
 import { loadAudit } from "./audit"
-import { loadIdentity, loadSettings } from "./identity"
+import { loadSettings } from "./settings"
 import {
   loadCollections,
   loadItems,
@@ -21,7 +21,6 @@ export type { CmsStatus, TemplateEditorConfig } from "@/types/type-cms"
 
 export async function getCmsData(permissions: string[]): Promise<CmsData> {
   const [
-    identity,
     settings,
     collections,
     items,
@@ -34,7 +33,6 @@ export async function getCmsData(permissions: string[]): Promise<CmsData> {
     users,
     audit,
   ] = await Promise.all([
-    loadIdentity(),
     loadSettings(),
     loadCollections(),
     loadItems(),
@@ -58,16 +56,6 @@ export async function getCmsData(permissions: string[]): Promise<CmsData> {
       navigation,
       submissions,
       users,
-    },
-    identity: {
-      name: identity?.nama_lembaga ?? "",
-      shortName: identity?.nama_singkat ?? "",
-      level: [identity?.jenjang, identity?.status_lembaga].filter(Boolean).join(" · "),
-      accreditation: identity?.akreditasi ?? "",
-      address: identity?.alamat ?? "",
-      phone: identity?.telepon ?? "",
-      email: identity?.email ?? "",
-      vision: identity?.visi ?? "",
     },
     settings: {
       siteTitle: displayValue(settings.get("general.site_title")),

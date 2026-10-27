@@ -7,7 +7,6 @@ export const modules = [
   "navigation",
   "submissions",
   "users",
-  "identity",
   "settings",
 ] as const
 
@@ -29,7 +28,4 @@ export const submissionStatus: Record<string, string> = {
   Diarsipkan: "archived",
 }
 
-export const editableFieldTypes = new Set([
-  "text", "textarea", "richtext", "number", "boolean", "date", "datetime", "select", "multiselect", "url", "email", "phone",
-  "media", "media_multiple", "relation", "json",
-])
+export { collectionFieldTypeSet as editableFieldTypes } from "@/lib/cms/collection-field-types"
